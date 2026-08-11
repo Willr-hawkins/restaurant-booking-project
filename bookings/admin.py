@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Service, SpecialHours
+from .models import Service, SpecialHours, Booking
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
@@ -12,3 +12,10 @@ class SpecialHoursAdmin(admin.ModelAdmin):
     list_display = ('date', 'is_closed', 'custom_start_time', 'custom_end_time', 'reason')
     list_filter = ('is_closed',)
     ordering = ('date',)
+
+@admin.register(Booking)
+class BookingAdmin(admin.ModelAdmin):
+    list_display = ('guest_name', 'date', 'time', 'party_size', 'status', 'deposit_required', 'deposit_paid')
+    list_filter = ('status', 'date', 'deposit_required')
+    search_fields = ('guest_name', 'guest_email', 'guest_phone')
+    ordering = ('date', 'time')

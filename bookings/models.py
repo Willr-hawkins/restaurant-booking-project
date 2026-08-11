@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 class Service(models.Model):
@@ -45,3 +47,48 @@ class SpecialHours(models.Model):
     def __str__(self):
         status = "Closed" if self.is_closed else "Custom Hours"
         return f"{self.date} - {status}"
+
+class Booking(models.Model):
+    STATUS_CHOICES = [
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+        ('no_show', 'No Show'),
+        ('completed', 'Completed'),
+    ]
+
+    # Guest details
+    guest_name = models.CharField(max_length=150)
+    guest_email = models.EmailField()
+    guest_phone = models.CharField(max_length=30)
+
+    # Booking details
+    date = models.DateField()
+    time = models.TimeField()
+    party_size = models.PositiveIntegerField()
+    special_requests = models.TextField(blank=True)
+    seating_preference = models.CharField(max_length=20, blank=True)
+
+    # Assignment - either a Table or a TableCombination, never both
+    table_content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+    table_object_id = models.PositiveIntegerField(null=True, blank=True)
+    assigned_table = GenericForeignKey('table_content_type', 'table_object_id')
+
+    # Timing
+    predicted_duration_minutes = models.PositiveIntegerField(default=90)
+    buffer_minutes = models.PositiveIntegerField(default=15)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
+
+    # Deposits - parties of 6+, wired up properly in Sprint 6
+    deposit_required = models.BooleanField(default=False)
+    deposit_paid = models.BooleanField(default=False)
+    deposit_amount = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date', 'time']
+
+    def __str__(self):
+        return f"{self.guest_name} - {self.date} {self.time} ({self.party_size})"

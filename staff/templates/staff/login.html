@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-8 max-w-sm">
+    <h1 class="font-display text-2xl mb-4">Staff Login</h1>
+    {% if error %}<p class="text-vermillion mb-4">{{ error }}</p>{% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username" class="block w-full mb-2 p-2 border">
+        <input type="password" name="password" placeholder="Password" class="block w-full mb-4 p-2 border">
+        <button type="submit" class="bg-ink text-paper px-4 py-2">Log In</button>
+    </form>
+</div>
+{% endblock %}

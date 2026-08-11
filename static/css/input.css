@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+    --color-paper: #F3EFE8;
+    --color-concrete: #ADA69C;
+    --color-maple: #C89A6A;
+    --color-ink: #292420;
+    --color-vermillion: #C1462E;
+
+    --font-display: "Shippori Mincho", serif;
+    --font-body: "Inter", sans-serif;
+}

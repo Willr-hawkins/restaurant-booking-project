@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="p-8">
+    <h1 class="font-display text-3xl mb-6">Floor Plan Editor</h1>
+    <div id="floor-canvas" class="relative bg-concrete/20 border border-concrete" style="width: 900px; height: 500px;">
+        <!-- Tables injected here by JS -->
+    </div>
+</div>
+
+<script src="{% static 'js/floor-plan-editor.js' %}"></script>
+{% endblock %}

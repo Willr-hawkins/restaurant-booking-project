@@ -26,11 +26,23 @@ class Table(models.Model):
         help_text="Inactive tables are soft-deleted — hidden from the floor plan but kept for historical bookings."
     )
 
+    is_fixed = models.BooleanField(
+        default=False,
+        help_text="Fixed in place (e.g. bar seating) - excluded from drag-and-drop repositioning"
+    )
+
     class Meta:
         ordering = ['name']
 
     def __str__(self):
         return f"{self.name} ({self.min_covers}-{self.max_covers} covers)"
+    
+    def save(self, *args, **kwargs):
+        # Auto-size the floor plan box based on capacity - bigger tables read bigger
+        size = min(60 + (self.max_covers - 1) * 10, 140)
+        self.width = size
+        self.height = size
+        super().save(*args, **kwargs)
     
 class TableCombination(models.Model):
     """ A set of tables that can be pushed together to seat a larger party. """

@@ -18,6 +18,9 @@ class Table(models.Model):
     position_x = models.FloatField(default=0)
     position_y = models.FloatField(default=0)
 
+    width = models.FloatField(default=80, help_text="Width in pixels on the floor plan canvas")
+    height = models.FloatField(default=80, help_text="Height in pixels on the floor plan canvas")
+
     is_active = models.BooleanField(
         default=True,
         help_text="Inactive tables are soft-deleted — hidden from the floor plan but kept for historical bookings."

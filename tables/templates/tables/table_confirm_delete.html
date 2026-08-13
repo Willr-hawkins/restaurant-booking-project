@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header text-2xl">Remove {{ table.name }}</h1>
+    {% for message in messages %}
+        <p class="mb-4 text-vermillion text-sm">{{ message }}</p>
+    {% endfor %}
+
+    {% if future_bookings %}
+        <div class="card">
+            <p class="mb-6 text-vermillion text-sm">
+                This table has {{ future_bookings.count }} upcoming booking(s). Reassign each one before it can be removed.
+            </p>
+            <ul>
+                {% for booking in future_bookings %}
+                    <li class="mb-4 pb-4 border-b border-concrete/30 last:border-0 last:mb-0 last:pb-0">
+                        <p class="text-sm">{{ booking.guest_name }} — {{ booking.date }} {{ booking.time }} ({{ booking.party_size }})</p>
+                        <form method="post" action="{% url 'reassign_booking' booking.id %}" class="flex gap-2 mt-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="table_id" value="{{ table.id }}">
+                            <select name="new_table_id">
+                                {% for other in other_tables %}
+                                    <option value="{{ other.id }}">{{ other.name }} ({{ other.min_covers }}-{{ other.max_covers }})</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-secondary whitespace-nowrap">Reassign</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="card">
+            <p class="mb-6">No upcoming bookings for this table. It's safe to remove.</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn-primary">Confirm Remove</button>
+            </form>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

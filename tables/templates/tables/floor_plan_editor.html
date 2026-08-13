@@ -2,11 +2,12 @@
 {% load static %}
 
 {% block content %}
-<div class="p-8">
-    <h1 class="font-display text-3xl mb-6">Floor Plan Editor</h1>
-    <div id="floor-canvas" class="relative bg-concrete/20 border border-concrete" style="width: 900px; height: 500px;">
-        <!-- Tables injected here by JS -->
+<div class="page-wrap">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="page-header mb-0">Floor Plan Editor</h1>
+        <a href="{% url 'table_list' %}" class="btn-link">Manage tables →</a>
     </div>
+    <div id="floor-canvas" class="relative bg-concrete/10 border border-concrete rounded-lg" style="width: 900px; height: 500px; max-width: 100%;"></div>
 </div>
 
 <script src="{% static 'js/floor-plan-editor.js' %}"></script>

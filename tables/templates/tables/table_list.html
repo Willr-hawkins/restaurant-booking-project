@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="page-header mb-0">Tables</h1>
+        <div class="flex gap-4">
+            <a href="{% url 'floor_plan_editor' %}" class="btn-link self-center">Floor plan →</a>
+            <a href="{% url 'table_create' %}" class="btn-primary">Add Table</a>
+        </div>
+    </div>
+
+    {% for message in messages %}
+        <p class="mb-6 text-vermillion text-sm">{{ message }}</p>
+    {% endfor %}
+
+    <div class="card">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="border-b border-concrete">
+                    <th class="py-3 font-body text-sm text-concrete font-medium">Name</th>
+                    <th class="py-3 font-body text-sm text-concrete font-medium">Covers</th>
+                    <th class="py-3 font-body text-sm text-concrete font-medium">Section</th>
+                    <th class="py-3 font-body text-sm text-concrete font-medium">Fixed</th>
+                    <th class="py-3"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for table in tables %}
+                    <tr class="border-b border-concrete/30 last:border-0">
+                        <td class="py-3">{{ table.name }}</td>
+                        <td class="py-3">{{ table.min_covers }}-{{ table.max_covers }}</td>
+                        <td class="py-3">{{ table.get_section_display }}</td>
+                        <td class="py-3">{% if table.is_fixed %}Yes{% else %}No{% endif %}</td>
+                        <td class="py-3 text-right">
+                            <a href="{% url 'table_edit' table.id %}" class="btn-link mr-4">Edit</a>
+                            <a href="{% url 'table_delete' table.id %}" class="btn-link text-vermillion">Remove</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

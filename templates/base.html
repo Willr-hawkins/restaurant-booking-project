@@ -10,10 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
 </head>
-<body class="bg-paper text-ink font-body">
+<body class="bg-paper text-ink font-body antialiased min-h-screen flex flex-col">
     {% include 'partials/navbar.html' %}
 
-    <main>
+    <main class="flex-1">
         {% block content %}{% endblock %}
     </main>
 

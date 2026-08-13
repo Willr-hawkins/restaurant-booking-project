@@ -1,10 +1,17 @@
 import json
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
+
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
 from .models import Table
+from .forms import TableForm
+from staff.decorators import manager_required
+from bookings.models import Booking
 
 def floor_plan_data(request):
     tables = Table.objects.filter(is_active=True).values(
@@ -25,3 +32,68 @@ def update_table_position(request, table_id):
     table.position_y = data['position_y']
     table.save(update_fields=['position_x', 'position_y'])
     return JsonResponse({'status': 'ok'})
+
+@manager_required
+def table_list(request):
+    tables = Table.objects.filter(is_active=True).order_by('name')
+    return render(request, 'tables/table_list.html', {'tables': tables})
+
+@manager_required
+def table_create(request):
+    if request.method == 'POST':
+        form = TableForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Table added.')
+            return redirect('table_list')
+    else:
+        form = TableForm()
+    return render(request, 'tables/table_form.html', {'form': form, 'title': 'Add Table'})
+
+@manager_required
+def table_edit(request, table_id):
+    table = get_object_or_404(Table, id=table_id)
+    if request.method == 'POST':
+        form = TableForm(request.POST, instance=table)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Table Updated')
+            return redirect('table_list')
+    else:
+        form = TableForm(instance=table)
+    return render(request, 'tables/table_form.html', {'form': form, 'title': f'Edit {table.name}'})
+
+@manager_required
+def table_delete(request, table_id):
+    table = get_object_or_404(Table, id=table_id)
+    table_ct = ContentType.objects.get_for_model(Table)
+    future_bookings = Booking.objects.filter(
+        table_content_type=table_ct,
+        table_object_id=table_id,
+        date__gte=timezone.now().date(),
+        status='confirmed',
+    )
+
+    if request.method == 'POST' and not future_bookings.exists():
+        table.is_active = False
+        table.save(update_fields=['is_active'])
+        messages.success(request, f'{table.name} removed from the floor plan.')
+        return redirect('table_list')
+    
+    other_tables = Table.objects.filter(is_active=True).exclude(id=table_id)
+    return render(request, 'tables/table_confirm_delete.html', {
+        'table': table,
+        'future_bookings': future_bookings,
+        'other_tables': other_tables,
+    })
+
+@manager_required
+def reassign_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if request.method == 'POST':
+        new_table = get_object_or_404(Table, id=request.POST.get('new_table_id'), is_active=True)
+        booking.assigned_table = new_table
+        booking.save()
+        messages.success(request, f'Booking reassigned to {new_table.name}.')
+    return redirect('table_delete', table_id=request.POST.get('table_id'))
+    

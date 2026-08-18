@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header text-2xl">Remove {{ combination }}</h1>
+    <div class="card">
+        <p class="mb-6">This will remove the combination. The individual tables are unaffected.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary">Confirm Remove</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

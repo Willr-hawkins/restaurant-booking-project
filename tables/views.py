@@ -8,8 +8,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
-from .models import Table
-from .forms import TableForm
+from .models import Table, TableCombination
+from .forms import TableForm, TableCombinationForm
 from staff.decorators import manager_required
 from bookings.models import Booking
 
@@ -96,4 +96,44 @@ def reassign_booking(request, booking_id):
         booking.save()
         messages.success(request, f'Booking reassigned to {new_table.name}.')
     return redirect('table_delete', table_id=request.POST.get('table_id'))
+
+@manager_required
+def combination_list(request):
+    combinations = TableCombination.objects.filter(is_active=True)
+    return render(request, 'tables/combination_list.html', {'combinations': combinations})
+    
+@manager_required
+def combination_create(request):
+    if request.method == 'POST':
+        form = TableCombinationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Combination created.')
+            return redirect('combination_list')
+    else:
+        form = TableCombinationForm()
+    return render(request, 'tables/combination_form.html', {'form': form, 'title': 'Add Combination'})
+
+@manager_required
+def combination_edit(request, combination_id):
+    combination = get_object_or_404(TableCombination, id=combination_id)
+    if request.method == 'POST':
+        form = TableCombinationForm(request.POST, instance=combination)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Combination updated.')
+            return redirect('combination_list')
+    else:
+        form = TableCombinationForm(instance=combination)
+    return render(request, 'tables/combination_form.html', {'form': form, 'title': f'Edit {combination}'})
+
+@manager_required
+def combination_delete(request, combination_id):
+    combination = get_object_or_404(TableCombination, id=combination_id)
+    if request.method == 'POST':
+        combination.is_active = False
+        combination.save(update_fields=['is_active'])
+        messages.success(request, 'Combination removed.')
+        return redirect('combination_list')
+    return render(request, 'tables/combination_confirm_delete.html', {'combination': combination})
     

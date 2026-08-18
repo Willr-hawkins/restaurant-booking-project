@@ -4,8 +4,8 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 
 from .models import Service, SpecialHours, Booking
-from .availability import get_available_slots, is_table_free, predict_duration, is_table_free_for_party, find_best_single_table
-from tables.models import Table
+from .availability import get_available_slots, is_table_free, predict_duration, is_table_free_for_party, find_best_single_table, find_best_table_or_combination
+from tables.models import Table, TableCombination
 
 class AvailabilityTests(TestCase):
     def setUp(self):
@@ -157,4 +157,35 @@ class TightFitAssignmentTests(TestCase):
 
     def test_no_fitting_table_returns_none(self):
         result = find_best_single_table(self.target_date, time(19, 0), 20)
+        self.assertIsNone(result)
+
+class CombinationFallbackTests(TestCase):
+    def setUp(self):
+        self.small = Table.objects.create(name='Combo Small', min_covers=2, max_covers=4)
+        self.medium = Table.objects.create(name='Combo Medium', min_covers=2, max_covers=4)
+        self.combo = TableCombination.objects.create(name='Small+Medium', min_covers=5, max_covers=7)
+        self.combo.tables.set([self.small, self.medium])
+        self.target_date = timezone.localtime().date() + timedelta(days=1)
+
+    def test_single_table_preferred_over_combination(self):
+        result = find_best_table_or_combination(self.target_date, time(19, 0), 3)
+        self.assertEqual(result, self.small)
+
+    def test_falls_back_to_combination_when_no_single_fits(self):
+        result = find_best_table_or_combination(self.target_date, time(19, 0), 7)
+        self.assertEqual(result, self.combo)
+
+    def test_returns_none_when_nothing_fits(self):
+        result = find_best_table_or_combination(self.target_date, time(19, 0), 20)
+        self.assertIsNone(result)
+
+    def test_busy_combination_excluded(self):
+        Booking.objects.create(
+            guest_name='Combo Occupant', guest_email='combo@example.com', guest_phone='07700900003',
+            date=self.target_date, time=time(19, 0), party_size=7,
+            predicted_duration_minutes=120, buffer_minutes=15,
+            table_content_type=ContentType.objects.get_for_model(TableCombination),
+            table_object_id=self.combo.id,
+        )
+        result = find_best_table_or_combination(self.target_date, time(19, 0), 7)
         self.assertIsNone(result)

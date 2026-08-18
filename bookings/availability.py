@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 
 from .models import Service, SpecialHours, Booking
-from tables.models import Table
+from tables.models import Table, TableCombination
 
 # Duration rules: (max_party_size, lunch_minutes, dinner_minutes)
 # Lunch tends to turn faster than dinner for the same party size
@@ -122,4 +122,25 @@ def find_best_single_table(date, start_time, party_size):
     for table in candidates:
         if is_table_free_for_party(table, date, start_time, party_size):
             return table
+    return None
+
+def find_best_table_or_combination(date, start_time, party_size):
+    """
+    Try the tightest-fitting single table first; if nothing fits, fall back to 
+    the tightest-fitting valid TableCombination. Returns the Table or
+    TableCombination instance, or None if nothing is available.
+    """
+    single = find_best_single_table(date, start_time, party_size)
+    if single:
+        return single
+    
+    candidates = TableCombination.objects.filter(
+        is_active=True,
+        min_covers__lte=party_size,
+        max_covers__gte=party_size
+    ).order_by('max_covers', 'id')
+
+    for combo in candidates:
+        if is_table_free_for_party(combo, date, start_time, party_size):
+            return combo
     return None

@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 
 from .models import Service, SpecialHours, Booking
-from .availability import get_available_slots, is_table_free, predict_duration, is_table_free_for_party
+from .availability import get_available_slots, is_table_free, predict_duration, is_table_free_for_party, find_best_single_table
 from tables.models import Table
 
 class AvailabilityTests(TestCase):
@@ -128,3 +128,33 @@ class IsTableFreeForPartyTests(TestCase):
         )
         # A new 4-top booking at 20:00 would overlap the 8-top's 150+15 min occupancy (frees at 21:45)
         self.assertFalse(is_table_free_for_party(self.table, self.target_date, time(20, 0), 4))
+
+class TightFitAssignmentTests(TestCase):
+    def setUp(self):
+        self.small_a = Table.objects.create(name='Small A', min_covers=2, max_covers=4)
+        self.small_b = Table.objects.create(name='Small B', min_covers=2, max_covers=4)
+        self.large = Table.objects.create(name='Large', min_covers=4, max_covers=6)
+        self.target_date = timezone.localtime().date() + timedelta(days=1)
+
+    def test_smallest_fitting_table_chosen(self):
+        result = find_best_single_table(self.target_date, time(19, 0), 3)
+        self.assertEqual(result, self.small_a)  # first by max_covers then id
+
+    def test_larger_party_skips_small_tables(self):
+        result = find_best_single_table(self.target_date, time(19, 0), 5)
+        self.assertEqual(result, self.large)
+
+    def test_falls_back_to_next_candidate_when_first_is_busy(self):
+        Booking.objects.create(
+            guest_name='Occupying', guest_email='occ@example.com', guest_phone='07700900002',
+            date=self.target_date, time=time(19, 0), party_size=3,
+            predicted_duration_minutes=90, buffer_minutes=15,
+            table_content_type=ContentType.objects.get_for_model(Table),
+            table_object_id=self.small_a.id,
+        )
+        result = find_best_single_table(self.target_date, time(19, 0), 3)
+        self.assertEqual(result, self.small_b)
+
+    def test_no_fitting_table_returns_none(self):
+        result = find_best_single_table(self.target_date, time(19, 0), 20)
+        self.assertIsNone(result)

@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 
 from .models import Service, SpecialHours, Booking
+from tables.models import Table
 
 # Duration rules: (max_party_size, lunch_minutes, dinner_minutes)
 # Lunch tends to turn faster than dinner for the same party size
@@ -104,3 +105,21 @@ def is_table_free_for_party(table_or_combo, date, start_time, party_size):
     """ Convenience wrapper - predicts duration from party size/time, then checks availability. """
     duration = predict_duration(party_size, start_time)
     return is_table_free(table_or_combo, date, start_time, duration)
+
+def find_best_single_table(date, start_time, party_size):
+    """
+    Return the smallest available single Table that fits the party, or None
+    if nothing fits. Tables are checked in ascending max_covers order (then id,
+    for a stable tie_break) so the tightest fit always wins - avoids seating a party of 2 at
+    an 8-top when a 2-top is free.
+    """
+    candidates = Table.objects.filter(
+        is_active=True,
+        min_covers__lte=party_size,
+        max_covers__gte=party_size,
+    ).order_by('max_covers', 'id')
+
+    for table in candidates:
+        if is_table_free_for_party(table, date, start_time, party_size):
+            return table
+    return None

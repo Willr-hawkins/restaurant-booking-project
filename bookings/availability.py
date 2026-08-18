@@ -1,7 +1,19 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
 
-from .models import Service, SpecialHours
+from .models import Service, SpecialHours, Booking
+
+# Duration rules: (max_party_size, lunch_minutes, dinner_minutes)
+# Lunch tends to turn faster than dinner for the same party size
+DURATION_RULES = [
+    (2, 75, 90),
+    (4, 90, 105),
+    (6, 105, 120),
+    (999, 120, 150),
+]
+
+LUNCH_CUTOFF = time(16, 0) # bookings before this are treated as "lunch" pacing
 
 def get_available_slots(date, party_size=None):
     """
@@ -53,3 +65,42 @@ def _filter_past_slots(date, slots):
     if date != now.date():
         return slots
     return [s for s in slots if s > now.time()]
+
+def is_table_free(table_or_combo, date, start_time, duration_minutes):
+    """
+    Check whether a Table or TableCombination is free at the given date/start_time
+    for the given duration, accounting for existing bookings' duration + buffer.
+    """
+    content_type = ContentType.objects.get_for_model(table_or_combo)
+    existing_bookings = Booking.objects.filter(
+        table_content_type=content_type,
+        table_object_id=table_or_combo.id,
+        date=date,
+        status='confirmed',
+    )
+
+    new_start = datetime.combine(date, start_time)
+    new_end = new_start + timedelta(minutes=duration_minutes)
+
+    for booking in existing_bookings:
+        existing_start = datetime.combine(date, booking.time)
+        occupied_minutes = booking.predicted_duration_minutes + booking.buffer_minutes
+        existing_end = existing_start + timedelta(minutes=occupied_minutes)
+
+        if new_start < existing_end and new_end > existing_start:
+            return False
+        
+    return True
+
+def predict_duration(party_size, start_time):
+    """ Estimate how long a table will be occupied, based on party size and time of day. """
+    is_lunch = start_time < LUNCH_CUTOFF
+    for max_size, lunch_minutes, dinner_minutes in DURATION_RULES:
+        if party_size <= max_size:
+            return lunch_minutes if is_lunch else dinner_minutes
+    return DURATION_RULES[-1][2]
+
+def is_table_free_for_party(table_or_combo, date, start_time, party_size):
+    """ Convenience wrapper - predicts duration from party size/time, then checks availability. """
+    duration = predict_duration(party_size, start_time)
+    return is_table_free(table_or_combo, date, start_time, duration)

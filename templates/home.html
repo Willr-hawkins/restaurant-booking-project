@@ -1,8 +1,68 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="page-wrap">
-    <h1 class="page-header">Welcome</h1>
-    <p class="text-concrete mt-2 max-w-md">Testing the design tokens.</p>
-    <a href="#" class="btn-primary mt-8">Book Now</a>
-</div>
+<!-- Hero -->
+<section class="bg-ink text-paper px-8 md:px-12 py-28 md:py-40">
+    <div class="max-w-3xl">
+        <p class="font-body text-sm tracking-widest uppercase text-maple mb-6">Japanese · Scandinavian</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-tight mb-8">
+            幽玄<br>
+            <span class="text-3xl md:text-4xl">Yūgen</span>
+        </h1>
+        <p class="font-body text-lg text-paper/80 max-w-xl mb-10">
+            A quiet room, honest ingredients, and the space between them. Yūgen brings the
+            precision of Japanese cooking together with the restraint of Scandinavian design —
+            concrete and maple, calm and craft.
+        </p>
+        <a href="{% url 'booking_widget' %}" class="btn-primary">Reserve a Table</a>
+    </div>
+</section>
+
+<!-- Philosophy -->
+<section id="about" class="page-wrap">
+    <div class="grid md:grid-cols-3 gap-10">
+        <div>
+            <svg class="w-10 h-10 mb-4" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2">
+                <circle cx="20" cy="20" r="14"/>
+                <line x1="20" y1="6" x2="20" y2="34"/>
+            </svg>
+            <h3 class="font-display text-xl mb-2">Seasonal Ingredients</h3>
+            <p class="text-concrete text-sm leading-relaxed">
+                Menus shift with the seasons, sourced from growers and fishmongers who share
+                our patience for doing things properly.
+            </p>
+        </div>
+        <div>
+            <svg class="w-10 h-10 mb-4" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="8" y="8" width="24" height="24" rx="2"/>
+                <line x1="8" y1="20" x2="32" y2="20"/>
+            </svg>
+            <h3 class="font-display text-xl mb-2">Material Honesty</h3>
+            <p class="text-concrete text-sm leading-relaxed">
+                Concrete, maple, and steel left to speak for themselves — nothing dressed up
+                as something it isn't.
+            </p>
+        </div>
+        <div>
+            <svg class="w-10 h-10 mb-4" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2">
+                <path d="M8 26 Q20 10 32 26" />
+            </svg>
+            <h3 class="font-display text-xl mb-2">Room to Breathe</h3>
+            <p class="text-concrete text-sm leading-relaxed">
+                Generous spacing, low noise, unhurried service. A table at Yūgen is yours
+                for the evening.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Visit -->
+<section class="bg-concrete/15 px-8 md:px-12 py-20">
+    <div class="max-w-4xl mx-auto text-center">
+        <h2 class="font-display text-3xl md:text-4xl mb-4">Visit Us</h2>
+        <p class="text-concrete mb-8">Dinner Tuesday–Sunday · Lunch Tuesday–Saturday</p>
+        <a href="{% url 'booking_widget' %}" class="btn-secondary">Check Availability</a>
+    </div>
+</section>
+
 {% endblock %}

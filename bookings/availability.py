@@ -168,3 +168,13 @@ def find_nearest_alternative_slots(date, requested_time, party_size, max_suggest
         if len(alternatives) >= max_suggestions:
             break
     return alternatives
+
+def find_next_available_date(start_date, party_size, days_to_check=14):
+    """ Look foward day by day for the first date with genuine availability. """
+    for offset in range(1, days_to_check + 1):
+        candidate_date = start_date + timedelta(days=offset)
+        slots = get_available_slots(candidate_date, party_size)
+        real_slots = [s for s in slots if find_best_table_or_combination(candidate_date, s, party_size)]
+        if real_slots:
+            return candidate_date, real_slots[0]
+    return None, None

@@ -12,7 +12,7 @@
 }
 
 @layer base {
-    input[type="text"],
+  input[type="text"],
   input[type="email"],
   input[type="password"],
   input[type="number"],
@@ -28,6 +28,11 @@
     padding: 0.65rem 0.9rem;
     font-family: var(--font-body);
     color: var(--color-ink);
+  }
+
+  input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--color-vermillion);
   }
 
   input:focus,

@@ -1,0 +1,19 @@
+{% if slots %}
+    <p class="text-sm text-concrete mb-3">Available time for {{ date }} ({{ party_size }} guests):</p>
+    <div class="flex flex-wrap gap-2">
+        {% for slot in slots %}
+            <button type="button" class="border border-ink px-4 py-2 rounded hover:bg-ink hover:text-paper transition-colors">
+                {{ slot|time:"g:i A" }}
+            </button>
+        {% endfor %}
+    </div>
+{% elif date %}
+    <p class="text-vermillion text-sm mb-2">No tables available on {{ date }} for {{ party_size }} guests.</p>
+    {% if next_date %}
+        <p class="text-sm">
+            Nearest availability: <strong>{{ next_date }}</strong> at <strong>{{ next_slot|time:"g:i A" }}</strong>
+        </p>
+    {% else %}
+        <p class="text-sm text-concrete">No availability found in the next two weeks.</p>
+    {% endif %}
+{% endif %}

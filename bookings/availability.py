@@ -144,3 +144,27 @@ def find_best_table_or_combination(date, start_time, party_size):
         if is_table_free_for_party(combo, date, start_time, party_size):
             return combo
     return None
+
+def find_nearest_alternative_slots(date, requested_time, party_size, max_suggestions=3):
+    """
+    When the requested slot has no availability, search all valid slots for the date 
+    (from the availability engine) and return the nearest ones - by time difference
+    - that do have an available table or combination.
+    """
+    all_slots = get_available_slots(date, party_size)
+
+    def time_diff(slot):
+        ref = datetime.today()
+        return abs((datetime.combine(ref, slot) - datetime.combine(ref, requested_time)).total_seconds())
+    
+    sorted_slots = sorted(all_slots, key=time_diff)
+
+    alternatives = []
+    for slot in sorted_slots:
+        if slot == requested_time:
+            continue
+        if find_best_table_or_combination(date, slot, party_size):
+            alternatives.append(slot)
+        if len(alternatives) >= max_suggestions:
+            break
+    return alternatives

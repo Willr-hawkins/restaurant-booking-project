@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 
 from .models import Service, SpecialHours, Booking
-from .availability import get_available_slots, is_table_free, predict_duration, is_table_free_for_party, find_best_single_table, find_best_table_or_combination
+from .availability import get_available_slots, is_table_free, predict_duration, is_table_free_for_party, find_best_single_table, find_best_table_or_combination, find_nearest_alternative_slots
 from tables.models import Table, TableCombination
 
 class AvailabilityTests(TestCase):
@@ -189,3 +189,44 @@ class CombinationFallbackTests(TestCase):
         )
         result = find_best_table_or_combination(self.target_date, time(19, 0), 7)
         self.assertIsNone(result)
+
+class AlternativeSlotTests(TestCase):
+    def setUp(self):
+        self.service = Service.objects.create(
+            name='Dinner', day_of_week=1, start_time=time(17, 30), end_time=time(21, 30),
+            last_booking_time=time(20, 45), slot_interval_minutes=15, is_active=True,
+        )
+        self.table = Table.objects.create(name='Only Table', min_covers=2, max_covers=4)
+        today = timezone.localtime().date()
+        days_ahead = (1 - today.weekday()) % 7 or 7
+        self.target_date = today + timedelta(days=days_ahead)
+
+        # Book the only table at 19:00 — busy until 20:45 (90 min + 15 min buffer)
+        Booking.objects.create(
+            guest_name='Blocker', guest_email='blocker@example.com', guest_phone='07700900004',
+            date=self.target_date, time=time(19, 0), party_size=3,
+            predicted_duration_minutes=90, buffer_minutes=15,
+            table_content_type=ContentType.objects.get_for_model(Table),
+            table_object_id=self.table.id,
+        )
+
+    def test_nearest_alternative_ranked_by_proximity(self):
+        alternatives = find_nearest_alternative_slots(self.target_date, time(19, 0), 2, max_suggestions=2)
+        # A party of 2 at dinner predicts 90 min — exactly matching the blocker's duration.
+        # 17:30 frees the table exactly at 19:00 (17:30 + 90min); 20:45 is the next slot
+        # after the blocker's occupancy (19:00–20:45) ends. Both are valid; 17:30 is
+        # nearer (90 min away) than 20:45 (105 min away).
+        self.assertEqual(alternatives, [time(17, 30), time(20, 45)])
+
+    def test_no_alternative_when_fully_booked_all_day(self):
+        for hour, minute in [(18, 0), (18, 15), (18, 30), (18, 45), (17, 30), (17, 45),
+                          (20, 45), (21, 0), (21, 15), (21, 30)]:
+            Booking.objects.get_or_create(
+                guest_name='Filler', guest_email=f'filler{hour}{minute}@example.com', guest_phone='07700900005',
+                date=self.target_date, time=time(hour, minute), party_size=2,
+                predicted_duration_minutes=90, buffer_minutes=15,
+                table_content_type=ContentType.objects.get_for_model(Table),
+                table_object_id=self.table.id,
+            )
+        alternatives = find_nearest_alternative_slots(self.target_date, time(19, 0), 2)
+        self.assertEqual(alternatives, [])

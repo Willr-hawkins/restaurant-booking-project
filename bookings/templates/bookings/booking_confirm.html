@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header">Booking Confirmed</h1>
+    <div class="card">
+        <p class="font-display text-xl mb-6">Thank you, {{ booking.guest_name }}</p>
+
+        <div class="space-y-2 text-sm">
+            <p><span class="text-concrete">Date:</span> {{ booking.date }}</p>
+            <p><span class="text-concrete">Time:</span> {{ booking.time|time:"g:i A" }}</p>
+            <p><span class="text-concrete">Party Size:</span> {{ booking.party_size }}</p>
+            <p><span class="text-concrete">Table:</span> {{ assigned }}</p>
+            {% if booking.seating_preference %}
+                <p><span class="text-concrete">Seating Preference:</span> {{ booking.get_seating_preference_display|default:booking.seating_preference }}</p>
+            {% endif %}
+            {% if booking.special_requests %}
+                <p><span class="text-concrete">Special Requests:</span> {{ booking.special_requests }}</p>
+            {% endif %}
+        </div>
+
+        {% if booking.deposit_required %}
+            <p class="text-vermillion text-sm mt-6">
+                A deposit is required for parties of 6 or more. Payment details will follow seperately.
+            </p>
+        {% endif %}
+
+        <p class="text-sm text-concrete mt-6">
+            A confirmation email will be sent to {{ booking.guest_email }}.
+        </p>
+    </div>
+</div>
+{% endblock %}

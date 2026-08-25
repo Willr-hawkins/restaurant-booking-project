@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
 from datetime import datetime
 
 from .forms import BookingSearchForm, GuestDetailsForm
-from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date
+from .models import Booking
+from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration
 
 def booking_widget(request):
     form = BookingSearchForm()
@@ -62,3 +65,43 @@ def booking_details(request):
         'time': slot_time,
         'party_size': party_size,
     })
+
+def booking_confirm(request):
+    pending = request.session.get('pending_booking')
+    if not pending:
+        return redirect('booking_widget')
+    
+    date = datetime.strptime(pending['date'], '%Y-%m-%d').date()
+    slot_time = datetime.strptime(pending['time'], '%H:%M').time()
+    party_size = pending['party_size']
+
+    assigned = find_best_table_or_combination(date, slot_time, party_size)
+    if not assigned:
+        # Someone else took the last available table between form load and submission
+        messages.error(request, 'Sorry, that slot was just booked. Please choose another time.')
+        del request.session['pending_booking']
+        return redirect('booking_widget')
+    
+    duration = predict_duration(party_size, slot_time)
+    content_type = ContentType.objects.get_for_model(assigned)
+
+    booking = Booking.objects.create(
+        guest_name=pending['guest_name'],
+        guest_email=pending['guest_email'],
+        guest_phone=pending['guest_phone'],
+        date=date,
+        time=slot_time,
+        party_size=party_size,
+        special_requests=pending.get('special_requests', ''),
+        seating_preference=pending.get('seating_preference', ''),
+        table_content_type=content_type,
+        table_object_id=assigned.id,
+        predicted_duration_minutes=duration,
+        buffer_minutes=15,
+        status='confirmed',
+        deposit_required=party_size >= 6,
+    )
+
+    del request.session['pending_booking']
+
+    return render(request, 'bookings/booking_confirm.html', {'booking': booking, 'assigned': assigned})

@@ -1,0 +1,11 @@
+<div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; color: #292420;">
+    <h1 style="font-size: 22px;">See You Tonight</h1>
+    <p>Hi {{ booking.guest_name }}, just a reminder of your table at Yūgen:</p>
+
+    <table style="width: 100%; margin: 20px 0; font-size: 14px;">
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Time</td><td>{{ booking.time|time:"g:i A" }}</td></tr>
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Party Size</td><td>{{ booking.party_size }}</td></tr>
+    </table>
+
+    <p style="font-size: 13px; color: #ADA69C;">Yūgen — Japanese · Scandinavian</p>
+</div>

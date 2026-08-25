@@ -6,6 +6,7 @@ from datetime import datetime
 from .forms import BookingSearchForm, GuestDetailsForm
 from .models import Booking
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration
+from .emails import send_booking_confirmation
 
 def booking_widget(request):
     form = BookingSearchForm()
@@ -101,6 +102,8 @@ def booking_confirm(request):
         status='confirmed',
         deposit_required=party_size >= 6,
     )
+
+    send_booking_confirmation(booking)
 
     del request.session['pending_booking']
 

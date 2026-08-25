@@ -78,6 +78,8 @@ class Booking(models.Model):
     buffer_minutes = models.PositiveIntegerField(default=15)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
+    confirmation_email_status = models.CharField(max_length=225, blank=True)
+    reminder_email_status = models.CharField(max_length=225, blank=True)
 
     # Deposits - parties of 6+, wired up properly in Sprint 6
     deposit_required = models.BooleanField(default=False)

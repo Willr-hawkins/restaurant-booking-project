@@ -113,6 +113,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# SendGrid/Email settings
+SENDGRID_API_KEY = config('SENDGRID_API_KEY')
+FROM_EMAIL = config('FROM_EMAIL')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.1/ref/settings/#default-auto-field
 

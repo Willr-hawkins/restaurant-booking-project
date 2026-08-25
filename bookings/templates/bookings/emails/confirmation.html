@@ -1,0 +1,21 @@
+<div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; color: #292420;">
+    <h1 style="font-size: 22px;">Booking Confirmed</h1>
+    <p>Thank you, {{ booking.guest_name }} — we look forward to seeing you.</p>
+
+    <table style="width: 100%; margin: 20px 0; font-size: 14px;">
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Date</td><td>{{ booking.date }}</td></tr>
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Time</td><td>{{ booking.time|time:"g:i A" }}</td></tr>
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Party Size</td><td>{{ booking.party_size }}</td></tr>
+        {% if booking.special_requests %}
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Special Requests</td><td>{{ booking.special_requests }}</td></tr>
+        {% endif %}
+    </table>
+
+    {% if booking.deposit_required %}
+    <p style="color: #C1462E; font-size: 13px;">
+        A deposit is required for parties of 6 or more — we'll be in touch with payment details.
+    </p>
+    {% endif %}
+
+    <p style="font-size: 13px; color: #ADA69C;">Yūgen — Japanese · Scandinavian</p>
+</div>

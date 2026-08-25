@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header">Your Details</h1>
+    <p class="text-concrete text-sm mb-6">
+        {{ date }} at {{ time|time:"g:i A" }} - {{ party_size }} guests
+    </p>
+
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+
+            <div>
+                <label for="{{ form.guest_name.id_for_label }}">Full Name</label>
+                {{ form.guest_name }}
+                {% if form.guest_name.errors %}
+                    <p class="text-vermillion text-xs mt-1">{{ form.guest_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.guest_email.id_for_label }}">Email</label>
+                {{ form.guest_email }}
+                {% if form.guest_email.errors %}
+                    <p class="text-vermillion text-xs mt-1">{{ form.guest_email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.guest_phone.id_for_label }}">Phone Number</label>
+                {{ form.guest_phone }}
+                {% if form.guest_phone.errors %}
+                    <p class="text-vermillion text-xs mt-1">{{ form.guest_phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.seating_preference.id_for_label }}">Seating Preference</label>
+                {{ form.seating_preference }}
+                {% if form.seating_preference.errors %}
+                    <p class="text-vermillion text-xs mt-1">{{ form.seating_preference.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.special_requests.id_for_label }}">Specail Requests</label>
+                {{ form.special_requests }}
+                {% if form.specail_requests.errors %}
+                    <p class="text-vermillion text-xs mt-1">{{ form.special_requests.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn-primary mt-6">Continue</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

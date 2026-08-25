@@ -2,9 +2,10 @@
     <p class="text-sm text-concrete mb-3">Available time for {{ date }} ({{ party_size }} guests):</p>
     <div class="flex flex-wrap gap-2">
         {% for slot in slots %}
-            <button type="button" class="border border-ink px-4 py-2 rounded hover:bg-ink hover:text-paper transition-colors">
+            <a href="{% url 'booking_details' %}?date={{ date|date:'Y-m-d' }}&time={{ slot|time:'H:i' }}&party_size={{ party_size }}"
+                class="border border-ink px-4 py-2 rounded hover:bg-ink hover:text-paper transition-colors inline-block">
                 {{ slot|time:"g:i A" }}
-            </button>
+            </a>
         {% endfor %}
     </div>
 {% elif date %}

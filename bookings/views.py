@@ -1,7 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from datetime import datetime
 
-from .forms import BookingSearchForm
+from .forms import BookingSearchForm, GuestDetailsForm
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date
 
 def booking_widget(request):
@@ -31,3 +31,34 @@ def booking_slots(request):
 
     return render(request, 'bookings/partials/slot_list.html', context)
 
+def booking_details(request):
+    date_str = request.GET.get('date')
+    time_str = request.GET.get('time')
+    party_size_str = request.GET.get('party_size')
+
+    if not (date_str and time_str and party_size_str):
+        return redirect('booking_widget')
+    
+    date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    slot_time = datetime.strptime(time_str, '%H:%M').time()
+    party_size = int(party_size_str)
+
+    if request.method == 'POST':
+        form = GuestDetailsForm(request.POST)
+        if form.is_valid():
+            request.session['pending_booking'] = {
+                'date': date_str,
+                'time': time_str,
+                'party_size': party_size,
+                **form.cleaned_data,
+            }
+            return redirect('booking_confirm')  # built in the next task!
+    else:
+        form = GuestDetailsForm()
+
+    return render(request, 'bookings/booking_details.html', {
+        'form': form,
+        'date': date,
+        'time': slot_time,
+        'party_size': party_size,
+    })

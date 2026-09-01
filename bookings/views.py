@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from datetime import datetime
 
-from .forms import BookingSearchForm, GuestDetailsForm
+from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm
 from .models import Booking
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration
 from .emails import send_booking_confirmation
@@ -108,3 +108,38 @@ def booking_confirm(request):
     del request.session['pending_booking']
 
     return render(request, 'bookings/booking_confirm.html', {'booking': booking, 'assigned': assigned})
+
+def booking_manage(request, token):
+    booking = get_object_or_404(Booking, manage_token=token)
+    return render(request, 'bookings/booking_manage.html', {'booking': booking})
+
+def booking_cancel(request, token):
+    booking = get_object_or_404(Booking, manage_token=token)
+    if not booking.is_editable:
+        messages.error(request, "This booking can no longer be cancelled online - please call us directly.")
+        return redirect('booking_manage', token=token)
+    
+    if request.method == 'POST':
+        booking.status = 'cancelled'
+        booking.save(update_fields=['status'])
+        messages.success(request, "Your booking has been cancelled.")
+        return redirect('booking_manage', token=token)
+    
+    return render(request, 'bookings/booking_cancel_confirm.html', {'booking': booking})
+
+def booking_modify(request, token):
+    booking = get_object_or_404(Booking, manage_token=token)
+    if not booking.is_editable:
+        messages.error(request, "This booking can no longer be modified online - please call us directly.")
+        return redirect('booking_manage', token=token)
+    
+    if request.method == 'POST':
+        form = BookingModifyForm(request.POST, instance=booking)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your booking has been updated.")
+            return redirect('booking_manage', token=token)
+    else:
+        form = BookingModifyForm(instance=booking)
+
+    return render(request, 'bookings/booking_modify.html', {'form': form, 'booking': booking})

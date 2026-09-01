@@ -19,3 +19,4 @@ class BookingAdmin(admin.ModelAdmin):
     list_filter = ('status', 'date', 'deposit_required')
     search_fields = ('guest_name', 'guest_email', 'guest_phone')
     ordering = ('date', 'time')
+    readonly_fields = ('manage_token',)

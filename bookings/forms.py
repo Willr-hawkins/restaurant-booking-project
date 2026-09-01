@@ -1,4 +1,6 @@
 from django import forms
+from .models import Booking
+
 
 class BookingSearchForm(forms.Form):
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
@@ -25,4 +27,9 @@ class GuestDetailsForm(forms.Form):
         ],
         label="Seating Preference",
     )
-    
+
+
+class BookingModifyForm(forms.ModelForm):
+    class Meta:
+        model = Booking
+        fields = ['special_requests', 'seating_preference']

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header">Cancel Booking</h1>
+    <div class="card">
+        <p class="mb-6">Are you sure you'd like to cancel your booking on {{ booking.date }} at {{ booking.time|time:"g:i A" }}?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary">Confirm Cancellation</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

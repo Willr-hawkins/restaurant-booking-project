@@ -2,10 +2,12 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 def send_booking_confirmation(booking):
-    subject = f"Your table at Yūgen - {booking.date} at {booking.time.strftime('%-I:%M %p')}"
-    html_content = render_to_string('bookings/emails/confirmation.html', {'booking': booking})
+    manage_url = f"{settings.SITE_URL}{reverse('booking_manage', args=[booking.manage_token])}"
+    subject = f"Your table at Yūgen — {booking.date} at {booking.time.strftime('%-I:%M %p')}"
+    html_content = render_to_string('bookings/emails/confirmation.html', {'booking': booking, 'manage_url': manage_url})
 
     message = Mail(
         from_email=settings.FROM_EMAIL,

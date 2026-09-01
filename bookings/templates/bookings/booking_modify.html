@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header">Modify Booking</h1>
+    <p class="text-concrete text-sm mb-6">
+        Need to change your date, time, or party size instead? Please cancel this booking and make a new one.
+    </p>
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.seating_preference.id_for_label }}">Seating Preference</label>
+                {{ form.seating_preference }}
+            </div>
+            <div>
+                <label for="{{ form.special_requests.id_for_label }}">Special Requests</label>
+                {{ form.special_requests }}
+            </div>
+            <button type="submit" class="btn-primary mt-6">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

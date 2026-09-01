@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header">Your Booking</h1>
+    {% for message in messages %}
+        <p class="mb-4 text-sm {% if message.tags == 'error' %}text-vermillion{% else %}text-maple{% endif %}">{{ message }}</p>
+    {% endfor %}
+    <div class="card">
+        <p class="text-sm text-concrete mb-1">Status: {{ booking.get_status_display }}</p>
+        <p class="font-display text-xl mb-4">{{ booking.date }} at {{ booking.time|time:"g:i A" }}</p>
+        <p class="text-sm mb-1">Party of {{ booking.party_size }}</p>
+        {% if booking.seating_preference %}<p class="text-sm mb-1">Seating: {{ booking.get_seating_preference_display|default:booking.seating_preference }}</p>{% endif %}
+        {% if booking.special_requests %}<p class="text-sm mb-1">Requests: {{ booking.special_requests }}</p>{% endif %}
+
+        {% if booking.status == 'confirmed' %}
+            {% if booking.is_editable %}
+                <div class="flex gap-4 mt-6">
+                    <a href="{% url 'booking_modify' booking.manage_token %}" class="btn-secondary">Modify</a>
+                    <a href="{% url 'booking_cancel' booking.manage_token %}" class="btn-primary">Cancel Booking</a>
+                </div>
+            {% else %}
+                <p class="text-sm text-vermillion mt-6">
+                    This booking is within {{ booking.CANCELLATION_CUTOFF_HOURS }} hours - please call us directly for any changes.
+                </p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

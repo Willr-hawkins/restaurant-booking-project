@@ -1,6 +1,9 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+import uuid
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 class Service(models.Model):
     DAYS_OF_WEEK = [
@@ -49,6 +52,8 @@ class SpecialHours(models.Model):
         return f"{self.date} - {status}"
 
 class Booking(models.Model):
+    CANCELLATION_CUTOFF_HOURS = 2    
+
     STATUS_CHOICES = [
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
@@ -89,6 +94,12 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    manage_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    @property
+    def is_editable(self):
+        booking_dt = timezone.make_aware(datetime.combine(self.date, self.time))
+        return booking_dt - timezone.localtime() > timedelta(hours=self.CANCELLATION_CUTOFF_HOURS)
     class Meta:
         ordering = ['date', 'time']
 

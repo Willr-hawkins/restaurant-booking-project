@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap max-w-lg">
+    <h1 class="page-header">Phone Booking</h1>
+    {% for message in messages %}
+        <p class="mb-4 text-sm {% if message.tags == 'error' %}text-vermillion{% else %}text-maple{% endif %}">{{ message }}</p>
+    {% endfor %}
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+
+            <div>
+                <label for="{{ form.guest_name.id_for_label }}">Full Name</label>
+                {{ form.guest_name }}
+            </div>
+            <div>
+                <label for="{{ form.guest_email.id_for_label }}">Email</label>
+                {{ form.guest_email }}
+            </div>
+            <div>
+                <label for="{{ form.guest_phone.id_for_label }}">Phone Number</label>
+                {{ form.guest_phone }}
+            </div>
+            <div>
+                <label for="{{ form.date.id_for_label }}">Date</label>
+                {{ form.date }}
+            </div>
+            <div>
+                <label for="{{ form.time.id_for_label }}">Time</label>
+                {{ form.time }}
+            </div>
+            <div>
+                <label for="{{ form.party_size.id_for_label }}">Party Size</label>
+                {{ form.party_size }}
+            </div>
+            <div>
+                <label for="{{ form.seating_preference.id_for_label }}">Seating Preference</label>
+                {{ form.seating_preference }}
+            </div>
+            <div>
+                <label for="{{ form.special_requests.id_for_label }}">Special Requests</label>
+                {{ form.special_requests }}
+            </div>
+            <div>
+                <label for="{{ form.table_override.id_for_label }}">Table Override</label>
+                {{ form.table_override }}
+            </div>
+
+            <button type="submit" class="btn-primary mt-6">Create Booking</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -3,10 +3,13 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from datetime import datetime
 
-from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm
+from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm
 from .models import Booking
-from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration
+from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration, is_table_free_for_party
 from .emails import send_booking_confirmation
+
+from staff.decorators import staff_required
+from tables.models import Table, TableCombination
 
 def booking_widget(request):
     form = BookingSearchForm()
@@ -143,3 +146,58 @@ def booking_modify(request, token):
         form = BookingModifyForm(instance=booking)
 
     return render(request, 'bookings/booking_modify.html', {'form': form, 'booking': booking})
+
+@staff_required
+def phone_booking_create(request):
+    if request.method == 'POST':
+        form = PhoneBookingForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            date = data['date']
+            slot_time = data['time']
+            party_size = data['party_size']
+            override = data.get('table_override')
+
+            assigned = None
+            if override:
+                kind, obj_id = override.split(':')
+                model = Table if kind == 'table' else TableCombination
+                candidate = get_object_or_404(model, id=obj_id, is_active=True)
+                if is_table_free_for_party(candidate, date, slot_time, party_size):
+                    assigned = candidate
+                else:
+                    messages.error(request, f'{candidate} is not free at that time. Try auto-assign or a different table.')
+                    return render(request, 'bookings/phone_booking_form.html', {'form': form})
+            else:
+                assigned = find_best_table_or_combination(date, slot_time, party_size)
+
+            if not assigned:
+                messages.error(request, 'No tables available for that date/time/party size.')
+                return render(request, 'bookings/phone_booking_form.html', {'form': form})
+            
+            duration = predict_duration(party_size, slot_time)
+            content_type = ContentType.objects.get_for_model(assigned)
+
+            booking = Booking.objects.create(
+                guest_name=data['guest_name'],
+                guest_email=data['guest_email'],
+                guest_phone=data['guest_phone'],
+                date=date,
+                time=slot_time,
+                party_size=party_size,
+                special_requests=data.get('special_requests', ''),
+                seating_preference=data.get('seating_preference', ''),
+                table_content_type=content_type,
+                table_object_id=assigned.id,
+                predicted_duration_minutes=duration,
+                buffer_minutes=15,
+                status='confirmed',
+                deposit_required=party_size >= 6,
+            )
+            send_booking_confirmation(booking)
+            messages.success(request, f'Booking created for {booking.guest_name} - assigned {assigned}.')
+            return redirect('phone_booking_create')
+    else:
+        form = PhoneBookingForm()
+
+    return render(request, 'bookings/phone_booking_form.html', {'form': form})

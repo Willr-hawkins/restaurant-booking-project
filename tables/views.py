@@ -13,6 +13,7 @@ from .forms import TableForm, TableCombinationForm
 from staff.decorators import manager_required
 from bookings.models import Booking
 
+@manager_required
 def floor_plan_data(request):
     tables = Table.objects.filter(is_active=True).values(
         'id', 'name', 'min_covers', 'max_covers', 'section',
@@ -20,9 +21,11 @@ def floor_plan_data(request):
     )
     return JsonResponse(list(tables), safe=False)
 
+@manager_required
 def floor_plan_editor(request):
     return render(request, 'tables/floor_plan_editor.html')
 
+@manager_required
 @require_POST
 @csrf_protect
 def update_table_position(request, table_id):

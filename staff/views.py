@@ -2,6 +2,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 
+from staff.decorators import staff_required
+
 def staff_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -17,3 +19,7 @@ def staff_login(request):
 def staff_logout(request):
     logout(request)
     return redirect('staff_login')
+
+@staff_required
+def staff_dashboard(request):
+    return render(request, 'staff/dashboard.html')

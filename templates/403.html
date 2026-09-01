@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap max-w-lg text-center">
+    <h1 class="page-header">Access Denied</h1>
+    <p class="text-concrete">You don't have permission to view this page.</p>
+    <a href="{% url 'staff_dashboard' %}" class="btn-link mt-6 inline-block">Back to Dashboard</a>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap">
+    <h1 class="page-header">Staff Dashboard</h1>
+    <p class="text-concrete">Welcome, {{ request.user.get_full_name|default:request.user.username }}.</p>
+    <div class="flex gap-4 mt-6">
+        <a href="{% url 'table_list' %}" class="btn-link">Manage Tables</a>
+        <a href="{% url 'floor_plan_editor' %}" class="btn-link">Floor Plan</a>
+        <a href="{% url 'combination_list' %}" class="btn-link">Table Combinations</a>
+    </div>
+</div>
+{% endblock %}

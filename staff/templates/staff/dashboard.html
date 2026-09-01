@@ -3,12 +3,88 @@
 {% block content %}
 <div class="page-wrap">
     <h1 class="page-header">Staff Dashboard</h1>
-    <p class="text-concrete">Welcome, {{ request.user.get_full_name|default:request.user.username }}.</p>
-    <div class="flex gap-4 mt-6">
-        <a href="{% url 'table_list' %}" class="btn-link">Manage Tables</a>
-        <a href="{% url 'floor_plan_editor' %}" class="btn-link">Floor Plan</a>
-        <a href="{% url 'combination_list' %}" class="btn-link">Table Combinations</a>
+    <p class="text-concrete mb-8">Welcome, {{ request.user.get_full_name|default:request.user.username }}.</p>
+
+    {% if is_manager %}
+        <div class="grid md:grid-cols-3 gap-6 mb-10">
+            <div class="card">
+                <p class="text-sm text-concrete">Today's Bookings</p>
+                <p class="font-display text-3xl mt-1">{{ todays_booking_count }}</p>
+            </div>
+            <div class="card">
+                <p class="text-sm text-concrete">Today's Covers</p>
+                <p class="font-display text-3xl mt-1">{{ todays_covers }}</p>
+            </div>
+            <div class="card">
+                <p class="text-sm text-concrete">Bookings This Week</p>
+                <p class="font-display text-3xl mt-1">{{ upcoming_week_count }}</p>
+            </div>
+        </div>
+
+        <h2 class="font-display text-xl mb-4">Today's Bookings</h2>
+        <div class="card mb-10">
+            {% if todays_bookings %}
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-concrete">
+                            <th class="py-2 font-body text-concrete font-medium">Time</th>
+                            <th class="py-2 font-body text-concrete font-medium">Guest</th>
+                            <th class="py-2 font-body text-concrete font-medium">Party</th>
+                            <th class="py-2 font-body text-concrete font-medium">Requests</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in todays_bookings %}
+                            <tr class="border-b border-concrete/30 last:border-0">
+                                <td class="py-2">{{ booking.time|time:"g:i A" }}</td>
+                                <td class="py-2">{{ booking.guest_name }}</td>
+                                <td class="py-2">{{ booking.party_size }}</td>
+                                <td class="py-2">{{ booking.special_requests|default:"—" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-concrete">No bookings today.</p>
+            {% endif %}
+        </div>
+
+        <h2 class="font-display text-xl mb-4">Upcoming This Week</h2>
+        <div class="card mb-10">
+            {% if upcoming_week %}
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-concrete">
+                            <th class="py-2 font-body text-concrete font-medium">Date</th>
+                            <th class="py-2 font-body text-concrete font-medium">Time</th>
+                            <th class="py-2 font-body text-concrete font-medium">Guest</th>
+                            <th class="py-2 font-body text-concrete font-medium">Party</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in upcoming_week %}
+                            <tr class="border-b border-concrete/30 last:border-0">
+                                <td class="py-2">{{ booking.date }}</td>
+                                <td class="py-2">{{ booking.time|time:"g:i A" }}</td>
+                                <td class="py-2">{{ booking.guest_name }}</td>
+                                <td class="py-2">{{ booking.party_size }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-concrete">No bookings in the next 7 days.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="flex gap-4 flex-wrap">
         <a href="{% url 'phone_booking_create' %}" class="btn-link">Take Phone Booking</a>
+        {% if is_manager %}
+            <a href="{% url 'table_list' %}" class="btn-link">Manage Tables</a>
+            <a href="{% url 'floor_plan_editor' %}" class="btn-link">Floor Plan</a>
+            <a href="{% url 'combination_list' %}" class="btn-link">Table Combinations</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

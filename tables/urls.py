@@ -18,4 +18,7 @@ urlpatterns = [
     path('combinations/add/', views.combination_create, name='combination_create'),
     path('combinations/<int:combination_id>/edit/', views.combination_edit, name='combination_edit'),
     path('combinations/<int:combination_id>/delete/', views.combination_delete, name='combination_delete'),
+
+    path('floor-status/', views.floor_status_view, name='floor_status_view'),
+    path('floor-status-data/', views.floor_status_data, name='floor_status_data'),
 ]

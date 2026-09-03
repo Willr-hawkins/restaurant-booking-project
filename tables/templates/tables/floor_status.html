@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="page-header mb-0">Floor Status</h1>
+        <a href="{% url 'floor_plan_editor' %}" class="btn-link">Edit floor plan →</a>
+    </div>
+
+    <div class="flex gap-6 mb-6 text-sm">
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block bg-concrete"></span> Free</div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block bg-maple"></span> Turning soon</div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block bg-vermillion"></span> Seated</div>
+    </div>
+
+    <div id="floor-canvas" class="relative bg-concrete/10 border border-concrete rounded-lg" style="width: 900px; height: 500px; max-width: 100%;"></div>
+</div>
+
+<script src="{% static 'js/floor-status.js' %}"></script>
+{% endblock %}

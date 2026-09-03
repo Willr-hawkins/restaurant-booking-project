@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
+from datetime import datetime, timedelta
 
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
@@ -12,6 +13,9 @@ from .models import Table, TableCombination
 from .forms import TableForm, TableCombinationForm
 from staff.decorators import manager_required
 from bookings.models import Booking
+
+TURNING_SOON_MINUTES = 20
+STATUS_PRIORITY = {'free': 0, 'turning_soon': 1, 'seated': 2}
 
 @manager_required
 def floor_plan_data(request):
@@ -140,3 +144,60 @@ def combination_delete(request, combination_id):
         return redirect('combination_list')
     return render(request, 'tables/combination_confirm_delete.html', {'combination': combination})
     
+def compute_table_statuses():
+    """
+    Returns {table_id: status} for every active table, based on today's confirmed
+    bookings. A combinationn booking marks ALL its member tables - since the floor
+    plan only ever shows individual table boxes, not combination boxes.
+    """
+    now = timezone.localtime()
+    today = now.date()
+    now_dt = datetime.combine(today, now.time())
+
+    statuses = {t.id: 'free' for t in Table.objects.filter(is_active=True)}
+
+    table_ct = ContentType.objects.get_for_model(Table)
+    combo_ct = ContentType.objects.get_for_model(TableCombination)
+    todays_bookings = Booking.objects.filter(date=today, status='confirmed')
+
+    for booking in todays_bookings:
+        start = datetime.combine(today, booking.time)
+        seated_until = start + timedelta(minutes=booking.predicted_duration_minutes)
+        occupied_until = seated_until + timedelta(minutes=booking.buffer_minutes)
+
+        if start <= now_dt < seated_until:
+            new_status = 'turning_soon' if (seated_until - now_dt) <= timedelta(minutes=TURNING_SOON_MINUTES) else 'seated'
+        elif seated_until <= now_dt < occupied_until:
+            new_status = 'turning_soon'
+        else:
+            continue
+
+        if booking.table_content_type_id == table_ct.id:
+            table_ids = [booking.table_object_id]
+        elif booking.table_content_type_id == combo_ct.id:
+            combo = TableCombination.objects.filter(id=booking.table_object_id).first()
+            table_ids = list(combo.tables.values_list('id', flat=True)) if combo else []
+        else:
+            table_ids = []
+
+        for tid in table_ids:
+            if tid in statuses and STATUS_PRIORITY[new_status] > STATUS_PRIORITY[statuses[tid]]:
+                statuses[tid] = new_status
+    
+    return statuses
+
+@manager_required
+def floor_status_view(request):
+    return render(request, 'tables/floor_status.html')
+
+@manager_required
+def floor_status_data(request):
+    statuses = compute_table_statuses()
+    tables = Table.objects.filter(is_active=True).values(
+        'id', 'name', 'position_x', 'position_y', 'width', 'height', 'is_fixed'
+    )
+    data = []
+    for t in tables:
+        t['status'] = statuses.get(t['id'], 'free')
+        data.append(t)
+    return JsonResponse(data, safe=False)

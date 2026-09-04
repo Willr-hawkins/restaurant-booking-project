@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from datetime import datetime
+import stripe
+from django.conf import settings
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm
 from .models import Booking
@@ -201,3 +205,25 @@ def phone_booking_create(request):
         form = PhoneBookingForm()
 
     return render(request, 'bookings/phone_booking_form.html', {'form': form})
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
+    except (ValueError, stripe.error.SignatureVerificationError):
+        return HttpResponse(status=400)
+    
+    if event['type'] == 'payment_intent.succeeded':
+        intent = event['data']['object']
+        try:
+            booking_id = intent['metadata']['booking_id']
+        except (KeyError, TypeError):
+            booking_id = None
+        
+        if booking_id:
+            Booking.objects.filter(id=booking_id).update(deposit_paid=True)
+    
+    return HttpResponse(status=200)

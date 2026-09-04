@@ -121,6 +121,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 SENDGRID_API_KEY = config('SENDGRID_API_KEY')
 FROM_EMAIL = config('FROM_EMAIL')
 
+# STRIPE
+STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.1/ref/settings/#default-auto-field
 

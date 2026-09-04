@@ -11,4 +11,5 @@ urlpatterns = [
     path('manage/<uuid:token>/modify/', views.booking_modify, name='booking_modify'),
     path('phone/', views.phone_booking_create, name='phone_booking_create'),
     path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
+    path('payment-success/<uuid:token>/', views.booking_payment_success, name='booking_payment_success'),
 ]

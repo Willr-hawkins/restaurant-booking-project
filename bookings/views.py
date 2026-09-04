@@ -6,18 +6,22 @@ import stripe
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
 from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm
 from .models import Booking
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration, is_table_free_for_party
 from .emails import send_booking_confirmation
+from .payments import create_deposit_checkout_session, DEPOSIT_AMOUNT_PENCE
 
 from staff.decorators import staff_required
 from tables.models import Table, TableCombination
 
+
 def booking_widget(request):
     form = BookingSearchForm()
     return render(request, 'bookings/booking_widget.html', {'form': form})
+
 
 def booking_slots(request):
     """ HTMX endpoint = returns the slot list partial for a given date/party size. """
@@ -42,6 +46,7 @@ def booking_slots(request):
 
     return render(request, 'bookings/partials/slot_list.html', context)
 
+
 def booking_details(request):
     date_str = request.GET.get('date')
     time_str = request.GET.get('time')
@@ -49,7 +54,7 @@ def booking_details(request):
 
     if not (date_str and time_str and party_size_str):
         return redirect('booking_widget')
-    
+
     date = datetime.strptime(date_str, '%Y-%m-%d').date()
     slot_time = datetime.strptime(time_str, '%H:%M').time()
     party_size = int(party_size_str)
@@ -63,7 +68,7 @@ def booking_details(request):
                 'party_size': party_size,
                 **form.cleaned_data,
             }
-            return redirect('booking_confirm')  # built in the next task!
+            return redirect('booking_confirm')
     else:
         form = GuestDetailsForm()
 
@@ -74,22 +79,22 @@ def booking_details(request):
         'party_size': party_size,
     })
 
+
 def booking_confirm(request):
     pending = request.session.get('pending_booking')
     if not pending:
         return redirect('booking_widget')
-    
+
     date = datetime.strptime(pending['date'], '%Y-%m-%d').date()
     slot_time = datetime.strptime(pending['time'], '%H:%M').time()
     party_size = pending['party_size']
 
     assigned = find_best_table_or_combination(date, slot_time, party_size)
     if not assigned:
-        # Someone else took the last available table between form load and submission
         messages.error(request, 'Sorry, that slot was just booked. Please choose another time.')
         del request.session['pending_booking']
         return redirect('booking_widget')
-    
+
     duration = predict_duration(party_size, slot_time)
     content_type = ContentType.objects.get_for_model(assigned)
 
@@ -110,36 +115,48 @@ def booking_confirm(request):
         deposit_required=party_size >= 6,
     )
 
-    send_booking_confirmation(booking)
-
     del request.session['pending_booking']
 
+    if booking.deposit_required:
+        booking.status = 'awaiting_payment'
+        booking.deposit_amount = DEPOSIT_AMOUNT_PENCE / 100
+        booking.save(update_fields=['status', 'deposit_amount'])
+
+        success_url = request.build_absolute_uri(reverse('booking_payment_success', args=[booking.manage_token]))
+        cancel_url = request.build_absolute_uri(reverse('booking_manage', args=[booking.manage_token]))
+        session = create_deposit_checkout_session(booking, success_url, cancel_url)
+        return redirect(session.url)
+
+    send_booking_confirmation(booking)
     return render(request, 'bookings/booking_confirm.html', {'booking': booking, 'assigned': assigned})
+
 
 def booking_manage(request, token):
     booking = get_object_or_404(Booking, manage_token=token)
     return render(request, 'bookings/booking_manage.html', {'booking': booking})
+
 
 def booking_cancel(request, token):
     booking = get_object_or_404(Booking, manage_token=token)
     if not booking.is_editable:
         messages.error(request, "This booking can no longer be cancelled online - please call us directly.")
         return redirect('booking_manage', token=token)
-    
+
     if request.method == 'POST':
         booking.status = 'cancelled'
         booking.save(update_fields=['status'])
         messages.success(request, "Your booking has been cancelled.")
         return redirect('booking_manage', token=token)
-    
+
     return render(request, 'bookings/booking_cancel_confirm.html', {'booking': booking})
+
 
 def booking_modify(request, token):
     booking = get_object_or_404(Booking, manage_token=token)
     if not booking.is_editable:
         messages.error(request, "This booking can no longer be modified online - please call us directly.")
         return redirect('booking_manage', token=token)
-    
+
     if request.method == 'POST':
         form = BookingModifyForm(request.POST, instance=booking)
         if form.is_valid():
@@ -150,6 +167,7 @@ def booking_modify(request, token):
         form = BookingModifyForm(instance=booking)
 
     return render(request, 'bookings/booking_modify.html', {'form': form, 'booking': booking})
+
 
 @staff_required
 def phone_booking_create(request):
@@ -178,7 +196,7 @@ def phone_booking_create(request):
             if not assigned:
                 messages.error(request, 'No tables available for that date/time/party size.')
                 return render(request, 'bookings/phone_booking_form.html', {'form': form})
-            
+
             duration = predict_duration(party_size, slot_time)
             content_type = ContentType.objects.get_for_model(assigned)
 
@@ -198,13 +216,22 @@ def phone_booking_create(request):
                 status='confirmed',
                 deposit_required=party_size >= 6,
             )
-            send_booking_confirmation(booking)
-            messages.success(request, f'Booking created for {booking.guest_name} - assigned {assigned}.')
+
+            if booking.deposit_required:
+                booking.status = 'awaiting_payment'
+                booking.deposit_amount = DEPOSIT_AMOUNT_PENCE / 100
+                booking.save(update_fields=['status', 'deposit_amount'])
+                messages.success(request, f'Booking created for {booking.guest_name}, assigned {assigned} — awaiting £{booking.deposit_amount} deposit. Follow up with the guest to arrange payment.')
+            else:
+                send_booking_confirmation(booking)
+                messages.success(request, f'Booking created for {booking.guest_name} — assigned {assigned}.')
+
             return redirect('phone_booking_create')
     else:
         form = PhoneBookingForm()
 
     return render(request, 'bookings/phone_booking_form.html', {'form': form})
+
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -215,15 +242,25 @@ def stripe_webhook(request):
         event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
     except (ValueError, stripe.error.SignatureVerificationError):
         return HttpResponse(status=400)
-    
+
     if event['type'] == 'payment_intent.succeeded':
         intent = event['data']['object']
         try:
             booking_id = intent['metadata']['booking_id']
         except (KeyError, TypeError):
             booking_id = None
-        
+
         if booking_id:
-            Booking.objects.filter(id=booking_id).update(deposit_paid=True)
-    
+            booking = Booking.objects.filter(id=booking_id).first()
+            if booking:
+                booking.deposit_paid = True
+                booking.status = 'confirmed'
+                booking.save(update_fields=['deposit_paid', 'status'])
+                send_booking_confirmation(booking)
+
     return HttpResponse(status=200)
+
+
+def booking_payment_success(request, token):
+    booking = get_object_or_404(Booking, manage_token=token)
+    return render(request, 'bookings/booking_payment_success.html', {'booking': booking})

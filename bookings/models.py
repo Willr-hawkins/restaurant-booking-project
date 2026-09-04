@@ -55,6 +55,7 @@ class Booking(models.Model):
     CANCELLATION_CUTOFF_HOURS = 2    
 
     STATUS_CHOICES = [
+        ('awaiting_payment', 'Awaiting Payment'),
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
         ('no_show', 'No Show'),

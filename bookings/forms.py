@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 
 from .models import Booking
 from tables.models import Table, TableCombination
@@ -7,7 +8,16 @@ class BookingSearchForm(forms.Form):
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     party_size = forms.IntegerField(min_value=1, max_value=12, initial=2)
 
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs['min'] = timezone.localdate().isoformat()
+    
+    def clean_date(self):
+        date = self.clean_data['date']
+        if date < timezone.localdate():
+            raise forms.ValidationError("Please choose a date in the future.")
+        return date
+    
 class GuestDetailsForm(forms.Form):
     guest_name = forms.CharField(max_length=150, label="Full Name")
     guest_email = forms.EmailField(label="Email")
@@ -60,3 +70,10 @@ class PhoneBookingForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['table_override'].choices = build_table_choices()
+        self.fields['date'].widget.attrs['min'] = timezone.localdate().isoformat()
+
+    def clean_date(self):
+        date = self.clean_data['date']
+        if date < timezone.localdate():
+            raise forms.ValidationError("Please choose a date in the future.")
+        return date

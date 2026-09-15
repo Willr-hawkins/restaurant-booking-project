@@ -35,3 +35,8 @@ def create_deposit_checkout_session(booking, success_url, cancel_url):
         cancel_url=cancel_url,
     )
     return session
+
+def refund_deposit(booking):
+    if not booking.stripe_payment_intent_id:
+        return None
+    return stripe.Refund.create(payment_intent=booking.stripe_payment_intent_id)

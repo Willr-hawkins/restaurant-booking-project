@@ -9,10 +9,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 
 from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm
-from .models import Booking
+from .models import Booking, SpecialHours
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration, is_table_free_for_party
 from .emails import send_booking_confirmation
-from .payments import create_deposit_checkout_session, DEPOSIT_AMOUNT_PENCE
+from .payments import create_deposit_checkout_session, DEPOSIT_AMOUNT_PENCE, refund_deposit
 
 from staff.decorators import staff_required
 from tables.models import Table, TableCombination
@@ -32,17 +32,22 @@ def booking_slots(request):
     if date_str and party_size_str:
         date = datetime.strptime(date_str, '%Y-%m-%d').date()
         party_size = int(party_size_str)
-        candidate_slots = get_available_slots(date, party_size)
-        real_slots = [s for s in candidate_slots if find_best_table_or_combination(date, s, party_size)]
-
         context['date'] = date
         context['party_size'] = party_size
-        context['slots'] = real_slots
 
-        if not real_slots:
-            next_date, next_slot = find_next_available_date(date, party_size)
-            context['next_date'] = next_date
-            context['next_slot'] = next_slot
+        closure = SpecialHours.objects.filter(date=date, is_closed=True).first()
+        if closure:
+            context['closed'] = True
+            context['closed_reason'] = closure.reason
+        else:
+            candidate_slots = get_available_slots(date, party_size)
+            real_slots = [s for s in candidate_slots if find_best_table_or_combination(date, s, party_size)]
+            context['slots'] = real_slots
+
+            if not real_slots:
+                next_date, next_slot = find_next_available_date(date, party_size)
+                context['next_date'] = next_date
+                context['next_slot'] = next_slot
 
     return render(request, 'bookings/partials/slot_list.html', context)
 
@@ -144,8 +149,20 @@ def booking_cancel(request, token):
 
     if request.method == 'POST':
         booking.status = 'cancelled'
-        booking.save(update_fields=['status'])
-        messages.success(request, "Your booking has been cancelled.")
+
+        if booking.deposit_paid and not booking.deposit_refunded:
+            if booking.is_within_refund_window:
+                refund_deposit(booking)
+                booking.deposit_refunded = True
+                booking.save(update_fields=['status', 'deposit_refunded'])
+                messages.success(request, "Your booking has been cancelled and your deposit has been refunded.")
+            else:
+                booking.save(update_fields=['status'])
+                messages.success(request, f"Your booking has been cancelled. As this is within {booking.DEPOSIT_REFUND_CUTOFF_HOURS} hours of your booking time, your deposit is non-refundable per our cancellation policy.")
+        else:
+            booking.save(update_fields=['status'])
+            messages.success(request, "Your booking has been cancelled.")
+
         return redirect('booking_manage', token=token)
 
     return render(request, 'bookings/booking_cancel_confirm.html', {'booking': booking})
@@ -255,7 +272,8 @@ def stripe_webhook(request):
             if booking:
                 booking.deposit_paid = True
                 booking.status = 'confirmed'
-                booking.save(update_fields=['deposit_paid', 'status'])
+                booking.stripe_payment_intent_id = intent['id']
+                booking.save(update_fields=['deposit_paid', 'status', 'stripe_payment_intent_id'])
                 send_booking_confirmation(booking)
 
     return HttpResponse(status=200)

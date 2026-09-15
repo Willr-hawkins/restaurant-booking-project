@@ -28,6 +28,8 @@
         <p class="text-sm text-concrete mt-6">
             A confirmation email will be sent to {{ booking.guest_email }}.
         </p>
+
+        <a href="{% url 'booking_manage' booking.manage_token %}" class="btn-link mt-6 inline-block">Manage Your Booking</a>
     </div>
 </div>
 {% endblock %}

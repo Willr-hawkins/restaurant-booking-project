@@ -4,7 +4,19 @@
 <div class="page-wrap max-w-lg">
     <h1 class="page-header">Cancel Booking</h1>
     <div class="card">
-        <p class="mb-6">Are you sure you'd like to cancel your booking on {{ booking.date }} at {{ booking.time|time:"g:i A" }}?</p>
+        <p class="mb-4">Are you sure you'd like to cancel your booking on {{ booking.date }} at {{ booking.time|time:"g:i A" }}?</p>
+
+        {% if booking.deposit_paid and not booking.deposit_refunded %}
+            {% if booking.is_within_refund_window %}
+                <p class="text-sm text-concrete mb-6">Your £{{ booking.deposit_amount }} deposit will be refunded.</p>
+            {% else %}
+                <p class="text-sm text-vermillion mb-6">
+                    This is within {{ booking.DEPOSIT_REFUND_CUTOFF_HOURS }} hours of your booking - your £{{ booking.deposit_amount }} 
+                    deposit is non-refunable per our cancellation policy.
+                </p>
+            {% endif %}
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
             <button type="submit" class="btn-primary">Confirm Cancellation</button>

@@ -53,6 +53,7 @@ class SpecialHours(models.Model):
 
 class Booking(models.Model):
     CANCELLATION_CUTOFF_HOURS = 2    
+    DEPOSIT_REFUND_CUTOFF_HOURS = 48
 
     STATUS_CHOICES = [
         ('awaiting_payment', 'Awaiting Payment'),
@@ -96,6 +97,14 @@ class Booking(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     manage_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True)
+    deposit_refunded = models.BooleanField(default=False)
+
+    @property
+    def is_within_refund_window(self):
+        booking_dt = timezone.make_aware(datetime.combine(self.date, self.time))
+        return booking_dt - timezone.localtime() > timedelta(hours=self.DEPOSIT_REFUND_CUTOFF_HOURS)
 
     @property
     def is_editable(self):

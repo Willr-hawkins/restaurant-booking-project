@@ -2,10 +2,19 @@
 
 {% block content %}
 <div class="page-wrap max-w-lg text-center">
-    <h1 class="page-header">Payment Received</h1>
+    <h1 class="page-header">
+        {% if booking.deposit_paid %}Payment Received{% else %}Confirming Payment{% endif %}
+    </h1>
     <div class="card">
-        <p class="mb-4">Thank you - your deposit has been received and your table is confirmed.</p>
-        <p class="text-sm text-concrete">{{ booking.date }} at {{ booking.time|time:"g:i A" }} - party of {{ booking.party_size }}.</p>
+        {% if booking.deposit_paid %}
+            <p class="mb-4">Thank you — your deposit has been received and your table is confirmed.</p>
+            <p class="text-sm text-concrete mb-1">{{ booking.date }} at {{ booking.time|time:"g:i A" }} — party of {{ booking.party_size }}</p>
+            <p class="text-sm text-concrete">Deposit paid: £{{ booking.deposit_amount }}</p>
+            <p class="text-xs text-concrete mt-1">Reference: {{ booking.stripe_payment_intent_id }}</p>
+        {% else %}
+            <p class="mb-4">We're just confirming your payment — this usually takes a few seconds.</p>
+            <p class="text-sm text-concrete">Refresh this page shortly, or check your email for confirmation.</p>
+        {% endif %}
         <a href="{% url 'booking_manage' booking.manage_token %}" class="btn-link mt-6 inline-block">View Booking</a>
     </div>
 </div>

@@ -8,8 +8,8 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 
-from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm
-from .models import Booking, SpecialHours
+from .models import Booking, SpecialHours, Waitlist
+from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm, WaitlistForm
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration, is_table_free_for_party
 from .emails import send_booking_confirmation
 from .payments import create_deposit_checkout_session, DEPOSIT_AMOUNT_PENCE, refund_deposit
@@ -282,3 +282,19 @@ def stripe_webhook(request):
 def booking_payment_success(request, token):
     booking = get_object_or_404(Booking, manage_token=token)
     return render(request, 'bookings/booking_payment_success.html', {'booking': booking})
+
+def waitlist_signup(request):
+    initial = {
+        'date': request.GET.get('date', ''),
+        'party_size': request.GET.get('party_size', ''),
+    }
+    if request.method == 'POST':
+        form = WaitlistForm(request.POST)
+        if form.is_valid():
+            Waitlist.objects.create(**form.cleaned_data)
+            messages.success(request, "You're on the waitlist - we'll email you if a table frees up.")
+            return redirect('booking_widget')
+    else:
+        form = WaitlistForm(initial=initial)
+
+    return render(request, 'bookings/waitlist_signup.html', {'form': form})

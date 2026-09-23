@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 
-from .models import Booking
+from .models import Booking, Waitlist
 from tables.models import Table, TableCombination
 
 class BookingSearchForm(forms.Form):
@@ -74,6 +74,25 @@ class PhoneBookingForm(forms.Form):
 
     def clean_date(self):
         date = self.clean_data['date']
+        if date < timezone.localdate():
+            raise forms.ValidationError("Please choose a date in the future.")
+        return date
+    
+class WaitlistForm(forms.Form):
+    guest_name = forms.CharField(max_length=150, label="Full Name")
+    guest_email = forms.EmailField(label="Email")
+    guest_phone = forms.CharField(max_length=30, label="Phone Number")
+    date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), label="Preferred TIme")
+    party_size = forms.IntegerField(min_value=1, max_value=20)
+    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 3}), label="Notes (optional)")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs['min'] = timezone.localdate().isoformat()
+
+    def clean_date(self):
+        date = self.cleaned_data['date']
         if date < timezone.localdate():
             raise forms.ValidationError("Please choose a date in the future.")
         return date

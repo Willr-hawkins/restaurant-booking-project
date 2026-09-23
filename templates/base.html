@@ -12,6 +12,21 @@
     <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
 </head>
 <body class="bg-paper text-ink font-body antialiased min-h-screen flex flex-col">
+    {% if messages %}
+        <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full px-4 md:px-0">
+            {% for message in messages %}
+            <div class="toast-message flex items-start gap-4 {% if message.tags == 'error' %}border-l-vermillion{% else %}border-l-maple{% endif %}" data-toast>
+                <span class="text-lg leading-none mt-0.5 {% if message.tags == 'error' %}text-vermillion{% else %}text-maple{% endif %}">
+                    {% if message.tags == 'error' %}⚠{% else %}✓{% endif %}
+                </span>
+                <p class="text-sm text-ink flex-1 leading-snug">{{ message }}</p>
+                <button type="button" class="text-concrete hover:text-ink leading-none text-base shrink-0" aria-label="Dismiss">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        <script src="{% static 'js/toasts.js' %}"></script>
+    {% endif %}
+
     {% include 'partials/navbar.html' %}
 
     <main class="flex-1">

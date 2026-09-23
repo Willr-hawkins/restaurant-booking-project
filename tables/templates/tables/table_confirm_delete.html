@@ -3,9 +3,6 @@
 {% block content %}
 <div class="page-wrap max-w-lg">
     <h1 class="page-header text-2xl">Remove {{ table.name }}</h1>
-    {% for message in messages %}
-        <p class="mb-4 text-vermillion text-sm">{{ message }}</p>
-    {% endfor %}
 
     {% if future_bookings %}
         <div class="card">

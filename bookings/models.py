@@ -115,3 +115,21 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.guest_name} - {self.date} {self.time} ({self.party_size})"
+    
+class Waitlist(models.Model):
+    guest_name = models.CharField(max_length=150)
+    guest_email = models.EmailField()
+    guest_phone = models.CharField(max_length=30)
+    date = models.DateField()
+    time = models.TimeField()
+    party_size = models.PositiveIntegerField()
+    notes = models.TextField(blank=True)
+    notified = models.BooleanField(default=False)
+    claimed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.guest_name} — {self.date} {self.time} ({self.party_size})"

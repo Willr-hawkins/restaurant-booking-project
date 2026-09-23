@@ -3,9 +3,6 @@
 {% block content %}
 <div class="page-wrap max-w-lg">
     <h1 class="page-header">Your Booking</h1>
-    {% for message in messages %}
-        <p class="mb-4 text-sm {% if message.tags == 'error' %}text-vermillion{% else %}text-maple{% endif %}">{{ message }}</p>
-    {% endfor %}
     <div class="card">
         <p class="text-sm text-concrete mb-1">Status: {{ booking.get_status_display }}</p>
         <p class="font-display text-xl mb-4">{{ booking.date }} at {{ booking.time|time:"g:i A" }}</p>

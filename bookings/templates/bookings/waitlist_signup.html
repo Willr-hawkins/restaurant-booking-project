@@ -2,11 +2,11 @@
 
 {% block content %}
 <div class="page-wrap max-w-lg">
-    <h1 class="page-header">Phone Booking</h1>
+    <h1 class="page-header">Join the Waitlist</h1>
+    <p class="text-concrete text-sm mb-6">We'll email you if a table frees up matching your details.</p>
     <div class="card">
         <form method="post">
             {% csrf_token %}
-
             <div>
                 <label for="{{ form.guest_name.id_for_label }}">Full Name</label>
                 {{ form.guest_name }}
@@ -24,7 +24,7 @@
                 {{ form.date }}
             </div>
             <div>
-                <label for="{{ form.time.id_for_label }}">Time</label>
+                <label for="{{ form.time.id_for_label }}">Preferred Time</label>
                 {{ form.time }}
             </div>
             <div>
@@ -32,19 +32,10 @@
                 {{ form.party_size }}
             </div>
             <div>
-                <label for="{{ form.seating_preference.id_for_label }}">Seating Preference</label>
-                {{ form.seating_preference }}
+                <label for="{{ form.notes.id_for_label }}">Notes</label>
+                {{ form.notes }}
             </div>
-            <div>
-                <label for="{{ form.special_requests.id_for_label }}">Special Requests</label>
-                {{ form.special_requests }}
-            </div>
-            <div>
-                <label for="{{ form.table_override.id_for_label }}">Table Override</label>
-                {{ form.table_override }}
-            </div>
-
-            <button type="submit" class="btn-primary mt-6">Create Booking</button>
+            <button type="submit" class="btn-primary mt-6">Join Waitlist</button>
         </form>
     </div>
 </div>

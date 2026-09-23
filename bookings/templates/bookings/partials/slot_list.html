@@ -6,10 +6,10 @@
     <p class="text-sm text-concrete mb-3">Available times for {{ date }} ({{ party_size }} guests):</p>
     <div class="flex flex-wrap gap-2">
         {% for slot in slots %}
-        <a href="{% url 'booking_details' %}?date={{ date|date:'Y-m-d' }}&time={{ slot|time:'H:i' }}&party_size={{ party_size }}"
-           class="border border-ink px-4 py-2 rounded hover:bg-ink hover:text-paper transition-colors inline-block">
-            {{ slot|time:"g:i A" }}
-        </a>
+            <a href="{% url 'booking_details' %}?date={{ date|date:'Y-m-d' }}&time={{ slot|time:'H:i' }}&party_size={{ party_size }}"
+            class="border border-ink px-4 py-2 rounded hover:bg-ink hover:text-paper transition-colors inline-block">
+                {{ slot|time:"g:i A" }}
+            </a>
         {% endfor %}
     </div>
 {% elif date %}
@@ -21,4 +21,5 @@
     {% else %}
         <p class="text-sm text-concrete">No availability found in the next two weeks.</p>
     {% endif %}
+    <a href="{% url 'waitlist_signup' %}?date={{ date|date:'Y-m-d' }}&party_size={{ party_size }}" class="btn-link">Join the waitlist for this date →</a>
 {% endif %}

@@ -532,6 +532,9 @@
   .object-top {
     object-position: top;
   }
+  .px-2 {
+    padding-inline: calc(var(--spacing) * 2);
+  }
   .px-3 {
     padding-inline: calc(var(--spacing) * 3);
   }
@@ -540,6 +543,9 @@
   }
   .px-8 {
     padding-inline: calc(var(--spacing) * 8);
+  }
+  .py-1 {
+    padding-block: var(--spacing);
   }
   .py-1\.5 {
     padding-block: calc(var(--spacing) * 1.5);
@@ -732,6 +738,9 @@
     }
     .hover\:text-ink:hover {
       color: var(--color-ink);
+    }
+    .hover\:text-maple:hover {
+      color: var(--color-maple);
     }
     .hover\:text-paper:hover {
       color: var(--color-paper);

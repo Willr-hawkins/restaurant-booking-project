@@ -11,7 +11,7 @@ import uuid
 import stripe
 from datetime import datetime, timedelta
 
-from .models import Booking, SpecialHours, Waitlist
+from .models import Booking, SpecialHours, Waitlist, Guest, get_or_create_guest
 from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm, WaitlistForm
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration, is_table_free_for_party
 from .emails import send_booking_confirmation, send_waitlist_notification
@@ -106,10 +106,13 @@ def booking_confirm(request):
     duration = predict_duration(party_size, slot_time)
     content_type = ContentType.objects.get_for_model(assigned)
 
+    guest = get_or_create_guest(pending['guest_name'], pending['guest_email'], pending['guest_phone'])
+
     booking = Booking.objects.create(
         guest_name=pending['guest_name'],
         guest_email=pending['guest_email'],
         guest_phone=pending['guest_phone'],
+        guest=guest,
         date=date,
         time=slot_time,
         party_size=party_size,
@@ -222,10 +225,13 @@ def phone_booking_create(request):
             duration = predict_duration(party_size, slot_time)
             content_type = ContentType.objects.get_for_model(assigned)
 
+            guest = get_or_create_guest(data['guest_name'], data['guest_email'], data['guest_phone'])
+
             booking = Booking.objects.create(
                 guest_name=data['guest_name'],
                 guest_email=data['guest_email'],
                 guest_phone=data['guest_phone'],
+                guest=guest,
                 date=date,
                 time=slot_time,
                 party_size=party_size,
@@ -341,10 +347,13 @@ def waitlist_claim(request, token):
     duration = predict_duration(entry.party_size, entry.time)
     content_type = ContentType.objects.get_for_model(assigned)
 
+    guest = get_or_create_guest(entry.guest_name, entry.guest_email, entry.guest_phone)
+
     booking = Booking.objects.create(
         guest_name=entry.guest_name,
         guest_email=entry.guest_email,
         guest_phone=entry.guest_phone,
+        guest=guest,
         date=entry.date,
         time=entry.time,
         party_size=entry.party_size,
@@ -380,3 +389,20 @@ def mark_no_show(request, booking_id):
         booking.save(update_fields=['status'])
         messages.success(request, f'{booking.guest_name} marked as no-show.')
     return redirect('staff_dashboard')
+
+@staff_required
+def guest_profile(request, guest_id):
+    guest = get_object_or_404(Guest, id=guest_id)
+    bookings = guest.bookings.all().order_by('-date', '-time')
+
+    if request.method == 'POST':
+        guest.is_vip = 'is_vip' in request.POST
+        guest.notes = request.POST.get('notes', '')
+        guest.save(update_fields=['is_vip', 'notes'])
+        messages.success(request, 'Guest profile updated.')
+        return redirect('guest_profile', guest_id=guest.id)
+    
+    return render(request, 'bookings/guest_profile.html', {
+        'guest': guest,
+        'bookings': bookings,
+    })

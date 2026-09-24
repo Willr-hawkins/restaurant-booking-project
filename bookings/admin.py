@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Service, SpecialHours, Booking, Waitlist
+from .models import Service, SpecialHours, Booking, Waitlist, Guest
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
@@ -27,3 +27,9 @@ class WaitlistAdmin(admin.ModelAdmin):
     list_filter = ('date', 'notified', 'claimed')
     search_fields = ('guest_name', 'guest_email', 'guest_phone')
     ordering = ('date', 'time')
+
+@admin.register(Guest)
+class GuestAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'phone', 'is_vip')
+    list_filter = ('is_vip',)
+    search_fields = ('name', 'email', 'phone')

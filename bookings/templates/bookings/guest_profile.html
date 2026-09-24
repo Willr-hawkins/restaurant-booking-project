@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="flex items-center gap-3 mb-2">
+        <h1 class="page-header mb-0">{{ guest.name|default:guest.email }}</h1>
+        {% if guest.is_vip %}
+            <span class="text-xs uppercase tracking-wide bg-maple text-ink px-2 py-1 rounded">VIP</span>
+        {% endif %}
+    </div>
+    <p class="text-concrete text-sm mb-10">{{ guest.email }}{% if guest.phone %} · {{ guest.phone }}{% endif %}</p>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-12">
+        <div class="card">
+            <p class="text-sm text-concrete">Total Bookings</p>
+            <p class="font-display text-3xl mt-1">{{ bookings.count }}</p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-concrete">No-Shows</p>
+            <p class="font-display text-3xl mt-1 {% if guest.no_show_count > 0 %}text-vermillion{% endif %}">{{ guest.no_show_count }}</p>
+        </div>
+    </div>
+
+    <h2 class="font-display text-xl mb-4">Staff Notes</h2>
+    <div class="card mb-12">
+        <form method="post">
+            {% csrf_token %}
+            <label class="flex items-center gap-2 mt-0 mb-4">
+                <input type="checkbox" name="is_vip" {% if guest.is_vip %}checked{% endif %}>
+                Mark as VIP
+            </label>
+            <label for="notes">Notes</label>
+            <textarea name="notes" id="notes" rows="4">{{ guest.notes }}</textarea>
+            <button type="submit" class="btn-primary mt-6">Save</button>
+        </form>
+    </div>
+
+    <h2 class="font-display text-xl mb-4">Booking History</h2>
+    <div class="card">
+        {% if bookings %}
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="border-b border-concrete">
+                        <th class="py-2 font-body text-concrete font-medium">Date</th>
+                        <th class="py-2 font-body text-concrete font-medium">Time</th>
+                        <th class="py-2 font-body text-concrete font-medium">Party</th>
+                        <th class="py-2 font-body text-concrete font-medium">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        <tr class="border-b border-concrete/30 last:border-0">
+                            <td class="py-2">{{ booking.date }}</td>
+                            <td class="py-2">{{ booking.time|time:"g:i A" }}</td>
+                            <td class="py-2">{{ booking.party_size }}</td>
+                            <td class="py-2 {% if booking.status == 'no_show' %}text-vermillion{% endif %}">{{ booking.get_status_display }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-concrete">No bookings found</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -15,4 +15,5 @@ urlpatterns = [
     path('waitlist/', views.waitlist_signup, name='waitlist_signup'),
     path('waitlist/claim/<uuid:token>/', views.waitlist_claim, name='waitlist_claim'),
     path('booking/<int:booking_id>/no-show/', views.mark_no_show, name='mark_no_show'),
+    path('guest/<int:guest_id>/', views.guest_profile, name='guest_profile'),
 ]

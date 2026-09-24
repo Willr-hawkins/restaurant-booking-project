@@ -70,7 +70,11 @@
                             <tr class="border-b border-concrete/30 last:border-0 hover:bg-concrete/5 transition-colors">
                                 <td class="py-4 pr-4 whitespace-nowrap">{{ booking.time|time:"g:i A" }}</td>
                                 <td class="py-4 pr-4">
-                                    <span class="text-ink font-medium">{{ booking.guest_name }}</span>
+                                    {% if booking.guest %}
+                                        <a href="{% url 'guest_profile' booking.guest.id %}" class="text-ink font-medium hover:text-maple">{{ booking.guest_name }}</a>
+                                    {% else %}
+                                        <span class="text-ink font-medium">{{ booking.guest_name }}</span>
+                                    {% endif %}
                                     {% if booking.guest_no_show_count > 0 %}
                                         <span class="block text-vermillion text-xs mt-0.5">{{ booking.guest_no_show_count }} previous no-show{{ booking.guest_no_show_count|pluralize }}</span>
                                     {% endif %}
@@ -97,28 +101,34 @@
         <h2 class="font-display text-xl mb-4">Upcoming This Week</h2>
         <div class="card">
             {% if upcoming_week %}
-            <table class="w-full text-left text-sm">
-                <thead>
-                    <tr class="border-b border-concrete">
-                        <th class="py-2 font-body text-sm text-concrete font-medium">Date</th>
-                        <th class="py-2 font-body text-sm text-concrete font-medium">Time</th>
-                        <th class="py-2 font-body text-sm text-concrete font-medium">Guest</th>
-                        <th class="py-2 font-body text-sm text-concrete font-medium">Party</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for booking in upcoming_week %}
-                    <tr class="border-b border-concrete/30 last:border-0">
-                        <td class="py-2">{{ booking.date }}</td>
-                        <td class="py-2">{{ booking.time|time:"g:i A" }}</td>
-                        <td class="py-2">{{ booking.guest_name }}</td>
-                        <td class="py-2">{{ booking.party_size }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-concrete">
+                            <th class="py-2 font-body text-sm text-concrete font-medium">Date</th>
+                            <th class="py-2 font-body text-sm text-concrete font-medium">Time</th>
+                            <th class="py-2 font-body text-sm text-concrete font-medium">Guest</th>
+                            <th class="py-2 font-body text-sm text-concrete font-medium">Party</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in upcoming_week %}
+                        <tr class="border-b border-concrete/30 last:border-0">
+                            <td class="py-2">{{ booking.date }}</td>
+                            <td class="py-2">{{ booking.time|time:"g:i A" }}</td>
+                            <td class="py-2">
+                                {% if booking.guest %}
+                                    <a href="{% url 'guest_profile' booking.guest.id %}" class="hover:text-maple">{{ booking.guest_name }}</a>
+                                {% else %}
+                                    {{ booking.guest_name }}
+                                {% endif %}
+                            </td>
+                            <td class="py-2">{{ booking.party_size }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             {% else %}
-            <p class="text-concrete">No bookings in the next 7 days.</p>
+                <p class="text-concrete">No bookings in the next 7 days.</p>
             {% endif %}
         </div>
     {% endif %}

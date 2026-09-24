@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime, timedelta
 from django.utils import timezone
 
+
 class Service(models.Model):
     DAYS_OF_WEEK = [
         (0, 'Monday'),
@@ -16,7 +17,7 @@ class Service(models.Model):
         (6, 'Sunday'),
     ]
 
-    name = models.CharField(max_length=100) # e.g, "Lunch", "Dinner"
+    name = models.CharField(max_length=100)  # e.g, "Lunch", "Dinner"
     day_of_week = models.IntegerField(choices=DAYS_OF_WEEK)
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -34,14 +35,15 @@ class Service(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.get_day_of_week_display()})"
-    
+
+
 class SpecialHours(models.Model):
     """ Overrides normal service hours for a specific date - closures, holidays, private functions. """
     date = models.DateField(unique=True)
     is_closed = models.BooleanField(default=True)
     custom_start_time = models.TimeField(null=True, blank=True)
     custom_end_time = models.TimeField(null=True, blank=True)
-    reason = models.CharField(max_length=255, blank=True) # e.g, "Christmas Day", "Private Function"
+    reason = models.CharField(max_length=255, blank=True)  # e.g, "Christmas Day", "Private Function"
 
     class Meta:
         ordering = ['date']
@@ -51,8 +53,39 @@ class SpecialHours(models.Model):
         status = "Closed" if self.is_closed else "Custom Hours"
         return f"{self.date} - {status}"
 
+
+class Guest(models.Model):
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=150, blank=True)
+    phone = models.CharField(max_length=30, blank=True)
+    is_vip = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name or self.email
+
+    @property
+    def no_show_count(self):
+        return self.bookings.filter(status='no_show').count()
+
+
+def get_or_create_guest(name, email, phone):
+    guest, created = Guest.objects.get_or_create(email=email)
+    if created or not guest.name:
+        guest.name = name
+    if created or not guest.phone:
+        guest.phone = phone
+    guest.save(update_fields=['name', 'phone'])
+    return guest
+
+
 class Booking(models.Model):
-    CANCELLATION_CUTOFF_HOURS = 2    
+    CANCELLATION_CUTOFF_HOURS = 2
     DEPOSIT_REFUND_CUTOFF_HOURS = 48
 
     STATUS_CHOICES = [
@@ -67,6 +100,9 @@ class Booking(models.Model):
     guest_name = models.CharField(max_length=150)
     guest_email = models.EmailField()
     guest_phone = models.CharField(max_length=30)
+    guest = models.ForeignKey(
+        Guest, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings'
+    )
 
     # Booking details
     date = models.DateField()
@@ -110,12 +146,14 @@ class Booking(models.Model):
     def is_editable(self):
         booking_dt = timezone.make_aware(datetime.combine(self.date, self.time))
         return booking_dt - timezone.localtime() > timedelta(hours=self.CANCELLATION_CUTOFF_HOURS)
+
     class Meta:
         ordering = ['date', 'time']
 
     def __str__(self):
         return f"{self.guest_name} - {self.date} {self.time} ({self.party_size})"
-    
+
+
 class Waitlist(models.Model):
     CLAIM_WINDOW_HOURS = 2
 
@@ -132,6 +170,7 @@ class Waitlist(models.Model):
 
     claim_token = models.UUIDField(null=True, blank=True, unique=True)
     claim_expires_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         ordering = ['created_at']
 

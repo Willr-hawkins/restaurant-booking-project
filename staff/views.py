@@ -33,21 +33,17 @@ def staff_dashboard(request):
         today = timezone.localtime().date()
         week_end = today + timedelta(days=7)
 
-        todays_bookings = list(Booking.objects.filter(date=today, status='confirmed').order_by('time'))
+        todays_bookings = list(
+            Booking.objects.filter(date=today, status='confirmed').select_related('guest').order_by('time')
+        )
         todays_covers = sum(b.party_size for b in todays_bookings)
 
-        no_show_counts = dict(
-            Booking.objects.filter(status='no_show')
-            .values('guest_email')
-            .annotate(count=Count('id'))
-            .values_list('guest_email', 'count')
-        )
         for b in todays_bookings:
-            b.guest_no_show_count = no_show_counts.get(b.guest_email, 0)
+            b.guest_no_show_count = b.guest.no_show_count if b.guest else 0
 
         upcoming_week = Booking.objects.filter(
             date__gt=today, date__lte=week_end, status='confirmed'
-        ).order_by('date', 'time')
+        ).select_related('guest').order_by('date', 'time')
 
         context.update({
             'is_manager': True,

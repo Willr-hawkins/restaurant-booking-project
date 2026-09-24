@@ -1,0 +1,22 @@
+<div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; color: #292420;">
+    <h1 style="font-size: 22px;">A Table Just Opened Up</h1>
+    <p>Hi {{ waitlist.guest_name }}, a table matching your request has become available:</p>
+
+    <table style="width: 100%; margin: 20px 0; font-size: 14px;">
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Date</td><td>{{ waitlist.date }}</td></tr>
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Time</td><td>{{ waitlist.time|time:"g:i A" }}</td></tr>
+        <tr><td style="color: #ADA69C; padding: 4px 0;">Party Size</td><td>{{ waitlist.party_size }}</td></tr>
+    </table>
+
+    <p style="margin: 24px 0;">
+        <a href="{{ claim_url }}" style="background-color: #C1462E; color: #F3EFE8; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-block;">
+            Claim This Table
+        </a>
+    </p>
+
+    <p style="font-size: 13px; color: #ADA69C;">
+        This offer expires in {{ waitlist.CLAIM_WINDOW_HOURS }} hours — first to claim gets the table.
+    </p>
+
+    <p style="font-size: 13px; color: #ADA69C;">Yūgen — Japanese · Scandinavian</p>
+</div>

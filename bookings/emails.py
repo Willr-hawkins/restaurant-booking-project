@@ -44,3 +44,23 @@ def send_booking_reminder(booking):
         booking.reminder_email_status = f"Failed: {e}"
 
     booking.save(update_fields=['reminder_email_status'])
+
+def send_waitlist_notification(waitlist_entry):
+    claim_url = f"{settings.SITE_URL}{reverse('waitlist_claim', args=[waitlist_entry.claim_token])}"
+    subject = f"A table just opened up at Yūgen — {waitlist_entry.date}"
+    html_content = render_to_string('bookings/emails/waitlist_notification.html', {
+        'waitlist': waitlist_entry, 'claim_url': claim_url,
+    })
+
+    message = Mail(
+        from_email=settings.FROM_EMAIL,
+        to_emails=waitlist_entry.guest_email,
+        subject=subject,
+        html_content=html_content
+    )
+
+    try:
+        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        sg.send(message)
+    except Exception as e:
+        print(f"Failed to send waitlist notification: {e}")

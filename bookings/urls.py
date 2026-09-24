@@ -13,4 +13,5 @@ urlpatterns = [
     path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
     path('payment-success/<uuid:token>/', views.booking_payment_success, name='booking_payment_success'),
     path('waitlist/', views.waitlist_signup, name='waitlist_signup'),
+    path('waitlist/claim/<uuid:token>/', views.waitlist_claim, name='waitlist_claim'),
 ]

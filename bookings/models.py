@@ -117,6 +117,8 @@ class Booking(models.Model):
         return f"{self.guest_name} - {self.date} {self.time} ({self.party_size})"
     
 class Waitlist(models.Model):
+    CLAIM_WINDOW_HOURS = 2
+
     guest_name = models.CharField(max_length=150)
     guest_email = models.EmailField()
     guest_phone = models.CharField(max_length=30)
@@ -128,6 +130,8 @@ class Waitlist(models.Model):
     claimed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    claim_token = models.UUIDField(null=True, blank=True, unique=True)
+    claim_expires_at = models.DateTimeField(null=True, blank=True)
     class Meta:
         ordering = ['created_at']
 

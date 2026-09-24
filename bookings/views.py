@@ -1,17 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from datetime import datetime
-import stripe
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
+from django.utils import timezone
+
+import uuid
+import stripe
+from datetime import datetime, timedelta
 
 from .models import Booking, SpecialHours, Waitlist
 from .forms import BookingSearchForm, GuestDetailsForm, BookingModifyForm, PhoneBookingForm, WaitlistForm
 from .availability import get_available_slots, find_best_table_or_combination, find_next_available_date, predict_duration, is_table_free_for_party
-from .emails import send_booking_confirmation
+from .emails import send_booking_confirmation, send_waitlist_notification
 from .payments import create_deposit_checkout_session, DEPOSIT_AMOUNT_PENCE, refund_deposit
 
 from staff.decorators import staff_required
@@ -163,6 +166,8 @@ def booking_cancel(request, token):
             booking.save(update_fields=['status'])
             messages.success(request, "Your booking has been cancelled.")
 
+        notify_waitlist_if_match(booking)
+
         return redirect('booking_manage', token=token)
 
     return render(request, 'bookings/booking_cancel_confirm.html', {'booking': booking})
@@ -298,3 +303,71 @@ def waitlist_signup(request):
         form = WaitlistForm(initial=initial)
 
     return render(request, 'bookings/waitlist_signup.html', {'form': form})
+
+def notify_waitlist_if_match(cancelled_booking):
+    """
+    First-come-first-served: find the earliest still-waiting entry on the same
+    date whose party would actually fit in what's now free, notify only that one.
+    """
+    candidates = Waitlist.objects.filter(
+        date=cancelled_booking.date, notified=False, claimed=False
+    ).order_by('created_at')
+
+    for entry in candidates:
+        if find_best_table_or_combination(entry.date, entry.time, entry.party_size):
+            entry.claim_token = uuid.uuid4()
+            entry.claim_expires_at = timezone.now() + timedelta(hours=entry.CLAIM_WINDOW_HOURS)
+            entry.notified = True
+            entry.save(update_fields=['claim_token', 'claim_expires_at', 'notified'])
+            send_waitlist_notification(entry)
+            break
+
+def waitlist_claim(request, token):
+    entry = get_object_or_404(Waitlist, claim_token=token)
+
+    if entry.claimed:
+        messages.error(request, "This waitlist offer has already been claimed.")
+        return redirect('booking_widget')
+
+    if not entry.claim_expires_at or timezone.now() > entry.claim_expires_at:
+        messages.error(request, "This waitlist offer has expired.")
+        return redirect('booking_widget')
+    
+    assigned = find_best_table_or_combination(entry.date, entry.time, entry.party_size)
+    if not assigned:
+        messages.error(request, "Sorry, that table is no longer available.")
+        return redirect('booking_widget')
+    
+    duration = predict_duration(entry.party_size, entry.time)
+    content_type = ContentType.objects.get_for_model(assigned)
+
+    booking = Booking.objects.create(
+        guest_name=entry.guest_name,
+        guest_email=entry.guest_email,
+        guest_phone=entry.guest_phone,
+        date=entry.date,
+        time=entry.time,
+        party_size=entry.party_size,
+        special_requests=entry.notes,
+        table_content_type=content_type,
+        table_object_id=assigned.id,
+        predicted_duration_minutes=duration,
+        buffer_minutes=15,
+        status='confirmed',
+        deposit_required=entry.party_size >= 6,
+    )
+
+    entry.claimed = True
+    entry.save(update_fields=['claimed'])
+
+    if booking.deposit_required:
+        booking.status = 'awaiting_payment'
+        booking.deposit_amount = DEPOSIT_AMOUNT_PENCE / 100
+        booking.save(update_fields=['status', 'deposit_amount'])
+        success_url = request.build_absolute_uri(reverse('booking_payment_success', args=[booking.manage_token]))
+        cancel_url = request.build_absolute_uri(reverse('booking_manage', args=[booking.manage_token]))
+        session = create_deposit_checkout_session(booking, success_url, cancel_url)
+        return redirect(session.url)
+    
+    send_booking_confirmation(booking)
+    return render(request, 'bookings/booking_confirm.html', {'booking': booking, 'assigned': assigned})

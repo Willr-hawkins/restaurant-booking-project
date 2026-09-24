@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 
@@ -33,8 +33,17 @@ def staff_dashboard(request):
         today = timezone.localtime().date()
         week_end = today + timedelta(days=7)
 
-        todays_bookings = Booking.objects.filter(date=today, status='confirmed').order_by('time')
-        todays_covers = todays_bookings.aggregate(total=Sum('party_size'))['total'] or 0
+        todays_bookings = list(Booking.objects.filter(date=today, status='confirmed').order_by('time'))
+        todays_covers = sum(b.party_size for b in todays_bookings)
+
+        no_show_counts = dict(
+            Booking.objects.filter(status='no_show')
+            .values('guest_email')
+            .annotate(count=Count('id'))
+            .values_list('guest_email', 'count')
+        )
+        for b in todays_bookings:
+            b.guest_no_show_count = no_show_counts.get(b.guest_email, 0)
 
         upcoming_week = Booking.objects.filter(
             date__gt=today, date__lte=week_end, status='confirmed'
@@ -44,7 +53,7 @@ def staff_dashboard(request):
             'is_manager': True,
             'todays_bookings': todays_bookings,
             'todays_covers': todays_covers,
-            'todays_booking_count': todays_bookings.count(),
+            'todays_booking_count': len(todays_bookings),
             'upcoming_week': upcoming_week,
             'upcoming_week_count': upcoming_week.count(),
         })

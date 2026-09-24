@@ -371,3 +371,12 @@ def waitlist_claim(request, token):
     
     send_booking_confirmation(booking)
     return render(request, 'bookings/booking_confirm.html', {'booking': booking, 'assigned': assigned})
+
+@staff_required
+def mark_no_show(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if request.method == 'POST':
+        booking.status = 'no_show'
+        booking.save(update_fields=['status'])
+        messages.success(request, f'{booking.guest_name} marked as no-show.')
+    return redirect('staff_dashboard')

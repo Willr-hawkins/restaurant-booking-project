@@ -171,6 +171,8 @@ class Waitlist(models.Model):
     claim_token = models.UUIDField(null=True, blank=True, unique=True)
     claim_expires_at = models.DateTimeField(null=True, blank=True)
 
+    notifcation_email_status = models.CharField(max_length=225, blank=True)
+
     class Meta:
         ordering = ['created_at']
 

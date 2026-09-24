@@ -23,7 +23,7 @@ class BookingAdmin(admin.ModelAdmin):
 
 @admin.register(Waitlist)
 class WaitlistAdmin(admin.ModelAdmin):
-    list_display = ('guest_name', 'date', 'time', 'party_size', 'notified', 'claimed')
+    list_display = ('guest_name', 'date', 'time', 'party_size', 'notified', 'claimed', 'notification_email_status')
     list_filter = ('date', 'notified', 'claimed')
     search_fields = ('guest_name', 'guest_email', 'guest_phone')
     ordering = ('date', 'time')

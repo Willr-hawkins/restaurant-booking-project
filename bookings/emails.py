@@ -61,6 +61,9 @@ def send_waitlist_notification(waitlist_entry):
 
     try:
         sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        sg.send(message)
+        response = sg.send(message)
+        waitlist_entry.notification_email_status = f"Sent (status {response.status_code})"
     except Exception as e:
-        print(f"Failed to send waitlist notification: {e}")
+        waitlist_entry.notification_email_status = f"Failed: {e}"
+
+    waitlist_entry.save(update_fields=['notification_email_status'])

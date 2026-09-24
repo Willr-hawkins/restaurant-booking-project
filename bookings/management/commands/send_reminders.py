@@ -12,9 +12,15 @@ class Command(BaseCommand):
         target_date = timezone.localtime().date() + timedelta(days=1)
         bookings = Booking.objects.filter(date=target_date, status='confirmed', reminder_email_status='')
 
-        count = 0
+        sent = 0
+        failed = 0
         for booking in bookings:
             send_booking_reminder(booking)
-            count += 1
+            if booking.reminder_email_status.startswith('Sent'):
+                sent += 1
+            else:
+                failed += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Sent {count} reminder(s) for {target_date}."))
+        self.stdout.write(self.style.SUCCESS(
+            f"Reminders for {target_date}: {sent} sent, {failed} failed."
+        ))

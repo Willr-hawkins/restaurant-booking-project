@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.utils import timezone
+from django.db.models import Avg
 
 import uuid
 import stripe
@@ -17,7 +18,7 @@ from .availability import get_available_slots, find_best_table_or_combination, f
 from .emails import send_booking_confirmation, send_waitlist_notification
 from .payments import create_deposit_checkout_session, DEPOSIT_AMOUNT_PENCE, refund_deposit
 
-from staff.decorators import staff_required
+from staff.decorators import staff_required, manager_required
 from tables.models import Table, TableCombination
 
 
@@ -405,4 +406,79 @@ def guest_profile(request, guest_id):
     return render(request, 'bookings/guest_profile.html', {
         'guest': guest,
         'bookings': bookings,
+    })
+
+
+@manager_required
+def analytics_dashboard(request):
+    today = timezone.localdate()
+    default_start = today - timedelta(days=30)
+
+    start_date = request.GET.get('start_date') or default_start.isoformat()
+    end_date = request.GET.get('end_date') or today.isoformat()
+
+    bookings = Booking.objects.filter(date__gte=start_date, date__lte=end_date)
+    non_cancelled = bookings.exclude(status='cancelled')
+
+    total_bookings = bookings.count()
+    avg_party_size = non_cancelled.aggregate(avg=Avg('party_size'))['avg'] or 0
+
+    completed_or_noshow = bookings.filter(status__in=['completed', 'no_show'])
+    no_show_count = bookings.filter(status='no_show').count()
+    no_show_rate = (no_show_count / completed_or_noshow.count() * 100) if completed_or_noshow.count() else 0
+
+    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    day_counts = {}
+    for b in non_cancelled.values_list('date', flat=True):
+        day_counts[b.weekday()] = day_counts.get(b.weekday(), 0) + 1
+    busiest_day = day_names[max(day_counts, key=day_counts.get)] if day_counts else '—'
+
+    # Table x day-of-week heatmap - counts propagate from combination bookings
+    # to their member tables, same approach as the floor status view, so a 
+    # combo booking isn't invisible on the per-table breakdown
+    table_ct = ContentType.objects.get_for_model(Table)
+    combo_ct = ContentType.objects.get_for_model(TableCombination)
+
+    counts = {}
+    for b in non_cancelled.filter(table_content_type=table_ct).values('table_object_id', 'date'):
+        counts.setdefault(b['table_object_id'], {}).setdefault(b['date'].weekday(), 0)
+        counts[b['table_object_id']][b['date'].weekday()] += 1
+
+    for b in non_cancelled.filter(table_content_type=combo_ct).values('table_object_id', 'date'):
+        combo = TableCombination.objects.filter(id=b['table_object_id']).first()
+        if not combo:
+            continue
+        for t in combo.tables.all():
+            counts.setdefault(t.id, {}).setdefault(b['date'].weekday(), 0)
+            counts[t.id][b['date'].weekday()] += 1
+    
+    tables = Table.objects.filter(is_active=True).order_by('name')
+    heatmap = []
+    max_count = 0
+    for table in tables:
+        row_counts = [counts.get(table.id, {}).get(wd, 0) for wd in range(7)]
+        heatmap.append({'table': table.name, 'counts': row_counts})
+        max_count = max(max_count, max(row_counts) if row_counts else 0)
+
+    # Build display-ready cells with a readable minimum opacity, rather than
+    # computing this awkwardly in the template
+    for row in heatmap:
+        row['cells'] = []
+        for count in row['counts']:
+            if count > 0 and max_count > 0:
+                opacity = round(30 + (count / max_count) * 70)  # floor of 30%, scales to 100%
+            else:
+                opacity = 0
+            row['cells'].append({'count': count, 'opacity': opacity})
+
+    return render(request, 'bookings/analytics_dashboard.html', {
+        'start_date': start_date,
+        'end_date': end_date,
+        'total_bookings': total_bookings,
+        'avg_party_size': round(avg_party_size, 1),
+        'no_show_rate': round(no_show_rate, 1),
+        'busiest_day': busiest_day,
+        'heatmap': heatmap,
+        'max_count': max_count,
+        'day_names': day_names,
     })

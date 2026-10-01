@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-wrap">
+    <h1 class="page-header">Analytics</h1>
+
+    <form method="get" class="flex items-end gap-4 mb-10">
+        <div>
+            <label for="start_date">From</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date }}">
+        </div>
+        <div>
+            <label for="end_date">To</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date }}">
+        </div>
+        <button type="submit" clas btn-secondary>Update</button>
+    </form>
+
+    <div class="grid grid-cols-4 gap-6 mb-12">
+        <div class="card">
+            <p class="text-sm text-concrete">Total Bookings</p>
+            <p class="font-display text-3xl mt-1">{{ total_bookings }}</p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-concrete">Avg Party Size</p>
+            <p class="font-display text-3xl mt-1">{{ avg_party_size }}</p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-concrete">No-Show Rate</p>
+            <p class="font-display text-3xl mt-1 {% if no_show_rate > 10 %}text-vermillion{% endif %}">{{ no_show_rate }}%</p>
+        </div>
+        <div class="card">
+            <p class="text-sm text-concrete">Busiest Day</p>
+            <p class="font-display text-3xl mt-1">{{ busiest_day }}</p>
+        </div>
+    </div>
+
+    <h2 class="font-display text-xl mb-4">Table Utilization by Day</h2>
+    <div class="card overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="border-b border-concrete">
+                    <th class="py-2 pr-4 font-body text-concrete font-medium">Table</th>
+                    {% for day in day_names %}
+                        <th class="py-2 px-2 font-body text-concrete font-medium text-center">{{ day|slice:":3" }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in heatmap %}
+                    <tr class="border-b border-concrete/30 last:border-0">
+                        <td class="py-2 pr-4 whitespace-nowrap">{{ row.table }}</td>
+                        {% for cell in row.cells %}
+                            <td class="py-2 px-2 text-center">
+                                {% if cell.count > 0 %}
+                                    <span class="inline-block w-8 h-8 leading-8 rounded text-xs text-paper"
+                                        style="background-color: rgba(193, 70, 46, {{ cell.opacity }}%);">
+                                        {{ cell.count }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-block w-8 h-8 leading-8 rounded text-xs text-concrete/40">—</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

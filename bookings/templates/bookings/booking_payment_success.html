@@ -1,21 +1,45 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="page-wrap max-w-lg text-center">
+    <p class="font-body text-sm tracking-widest uppercase text-maple mb-3">
+        {% if booking.deposit_paid %}Deposit Received{% else %}Confirming Payment{% endif %}
+    </p>
     <h1 class="page-header">
-        {% if booking.deposit_paid %}Payment Received{% else %}Confirming Payment{% endif %}
+        {% if booking.deposit_paid %}You're All Set{% else %}One Moment{% endif %}
     </h1>
-    <div class="card">
+
+    <div class="card text-left">
         {% if booking.deposit_paid %}
-            <p class="mb-4">Thank you — your deposit has been received and your table is confirmed.</p>
-            <p class="text-sm text-concrete mb-1">{{ booking.date }} at {{ booking.time|time:"g:i A" }} — party of {{ booking.party_size }}</p>
-            <p class="text-sm text-concrete">Deposit paid: £{{ booking.deposit_amount }}</p>
-            <p class="text-xs text-concrete mt-1">Reference: {{ booking.stripe_payment_intent_id }}</p>
+            <p class="font-display text-xl mb-6 text-center">Thank you, {{ booking.guest_name }}</p>
+
+            <div class="space-y-3 text-sm border-t border-concrete/30 pt-6">
+                <div class="flex justify-between">
+                    <span class="text-concrete">Date</span>
+                    <span class="text-ink font-medium">{{ booking.date }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-concrete">Time</span>
+                    <span class="text-ink font-medium">{{ booking.time|time:"g:i A" }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-concrete">Party Size</span>
+                    <span class="text-ink font-medium">{{ booking.party_size }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-concrete">Deposit Paid</span>
+                    <span class="text-ink font-medium">£{{ booking.deposit_amount }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-concrete">Reference</span>
+                    <span class="text-ink font-medium text-xs">{{ booking.stripe_payment_intent_id }}</span>
+                </div>
+            </div>
         {% else %}
-            <p class="mb-4">We're just confirming your payment — this usually takes a few seconds.</p>
-            <p class="text-sm text-concrete">Refresh this page shortly, or check your email for confirmation.</p>
+            <p class="text-ink mb-2 text-center">We're just confirming your payment — this usually takes a few seconds.</p>
+            <p class="text-sm text-concrete text-center">Refresh this page shortly, or check your email for confirmation.</p>
         {% endif %}
-        <a href="{% url 'booking_manage' booking.manage_token %}" class="btn-link mt-6 inline-block">View Booking</a>
+
+        <a href="{% url 'booking_manage' booking.manage_token %}" class="btn-link mt-6 inline-block {% if booking.deposit_paid %}w-full text-center{% else %}mx-auto block w-fit{% endif %}">View Booking</a>
     </div>
 </div>
 {% endblock %}

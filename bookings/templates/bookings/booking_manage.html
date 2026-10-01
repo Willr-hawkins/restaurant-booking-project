@@ -1,34 +1,58 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="page-wrap max-w-lg">
-    <h1 class="page-header">Your Booking</h1>
-    <div class="card">
-        <p class="text-sm text-concrete mb-1">Status: {{ booking.get_status_display }}</p>
-        <p class="font-display text-xl mb-4">{{ booking.date }} at {{ booking.time|time:"g:i A" }}</p>
-        <p class="text-sm mb-1">Party of {{ booking.party_size }}</p>
-        
-        {% if booking.seating_preference %}
-            <p class="text-sm mb-1">Seating: {{ booking.get_seating_preference_display|default:booking.seating_preference }}</p>
-        {% endif %}
-        
-        {% if booking.special_requests %}
-            <p class="text-sm mb-1">Requests: {{ booking.special_requests }}</p>
-        {% endif %}
+    <p class="font-body text-sm tracking-widest uppercase text-maple mb-3">Your Reservation</p>
+    <h1 class="page-header">{{ booking.date }}</h1>
 
-        {% if booking.deposit_paid %}
-            <p class="text-sm mb-1">Deposit paid: £{{ booking.deposit_amount }} (Ref: {{ booking.stripe_payment_intent_id }})</p>
-        {% endif %}
+    <div class="card">
+        <div class="flex items-center justify-between mb-6">
+            <span class="font-display text-2xl">{{ booking.time|time:"g:i A" }}</span>
+            <span class="text-xs uppercase tracking-wide px-3 py-1 rounded
+                {% if booking.status == 'confirmed' %}bg-maple/30 text-ink
+                {% elif booking.status == 'cancelled' %}bg-concrete/30 text-concrete
+                {% else %}bg-concrete/20 text-concrete{% endif %}">
+                {{ booking.get_status_display }}
+            </span>
+        </div>
+
+        <div class="space-y-3 text-sm border-t border-concrete/30 pt-6">
+            <div class="flex justify-between">
+                <span class="text-concrete">Party Size</span>
+                <span class="text-ink font-medium">{{ booking.party_size }}</span>
+            </div>
+            {% if booking.seating_preference %}
+                <div class="flex justify-between">
+                    <span class="text-concrete">Seating</span>
+                    <span class="text-ink font-medium">{{ booking.get_seating_preference_display|default:booking.seating_preference }}</span>
+                </div>
+            {% endif %}
+            {% if booking.special_requests %}
+                <div class="flex justify-between gap-4">
+                    <span class="text-concrete whitespace-nowrap">Requests</span>
+                    <span class="text-ink text-right">{{ booking.special_requests }}</span>
+                </div>
+            {% endif %}
+            {% if booking.deposit_paid %}
+                <div class="flex justify-between">
+                    <span class="text-concrete">Deposit Paid</span>
+                    <span class="text-ink font-medium">£{{ booking.deposit_amount }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-concrete">Reference</span>
+                    <span class="text-ink font-medium text-xs">{{ booking.stripe_payment_intent_id }}</span>
+                </div>
+            {% endif %}
+        </div>
 
         {% if booking.status == 'confirmed' %}
             {% if booking.is_editable %}
-                <div class="flex gap-4 mt-6">
+                <div class="flex gap-4 mt-8 pt-6 border-t border-concrete/30">
                     <a href="{% url 'booking_modify' booking.manage_token %}" class="btn-secondary">Modify</a>
                     <a href="{% url 'booking_cancel' booking.manage_token %}" class="btn-primary">Cancel Booking</a>
                 </div>
             {% else %}
-                <p class="text-sm text-vermillion mt-6">
-                    This booking is within {{ booking.CANCELLATION_CUTOFF_HOURS }} hours - please call us directly for any changes.
+                <p class="text-sm text-vermillion mt-8 pt-6 border-t border-concrete/30">
+                    This booking is within {{ booking.CANCELLATION_CUTOFF_HOURS }} hours — please call us directly for any changes.
                 </p>
             {% endif %}
         {% endif %}

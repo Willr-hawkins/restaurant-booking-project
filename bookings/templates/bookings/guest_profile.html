@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="page-wrap">
+    <p class="text-xs uppercase tracking-widest text-maple mb-2">Staff</p>
     <div class="flex items-center gap-3 mb-2">
         <h1 class="page-header mb-0">{{ guest.name|default:guest.email }}</h1>
         {% if guest.is_vip %}
@@ -10,7 +11,7 @@
     </div>
     <p class="text-concrete text-sm mb-10">{{ guest.email }}{% if guest.phone %} · {{ guest.phone }}{% endif %}</p>
 
-    <div class="grid md:grid-cols-3 gap-6 mb-12">
+    <div class="grid md:grid-cols-2 gap-6 mb-12">
         <div class="card">
             <p class="text-sm text-concrete">Total Bookings</p>
             <p class="font-display text-3xl mt-1">{{ bookings.count }}</p>
@@ -25,13 +26,16 @@
     <div class="card mb-12">
         <form method="post">
             {% csrf_token %}
-            <label class="flex items-center gap-2 mt-0 mb-4">
-                <input type="checkbox" name="is_vip" {% if guest.is_vip %}checked{% endif %}>
+            <label class="flex items-center gap-2 mb-5 text-sm text-ink">
+                <input type="checkbox" name="is_vip" class="rounded border-concrete/40" {% if guest.is_vip %}checked{% endif %}>
                 Mark as VIP
             </label>
-            <label for="notes">Notes</label>
-            <textarea name="notes" id="notes" rows="4">{{ guest.notes }}</textarea>
-            <button type="submit" class="btn-primary mt-6">Save</button>
+            <div class="mb-6">
+                <label for="notes" class="block text-sm font-medium text-ink mb-1.5">Notes</label>
+                <textarea name="notes" id="notes" rows="4"
+                          class="border border-concrete/40 rounded px-3 py-2 w-full focus:outline-none focus:border-maple">{{ guest.notes }}</textarea>
+            </div>
+            <button type="submit" class="btn-primary">Save</button>
         </form>
     </div>
 

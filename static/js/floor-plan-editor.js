@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.createElement('div');
         el.className = table.is_fixed
             ? 'absolute flex items-center justify-center text-xs font-body bg-ink/60 text-paper border border-ink/20 rounded cursor-not-allowed'
-            : 'absolute flex items-center justify-center text-xs font-body cursor-move bg-maple text-ink border border-ink/20 rounded';
+            : 'absolute flex items-center justify-center text-xs font-body cursor-move bg-maple text-ink border border-ink/20 rounded transition-shadow';
         el.style.left = `${table.position_x}px`;
         el.style.top = `${table.position_y}px`;
         el.style.width = `${table.width}px`;
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeTable = el;
                 offsetX = e.clientX - el.offsetLeft;
                 offsetY = e.clientY - el.offsetTop;
+                el.classList.add('shadow-lg', 'z-10');
             });
         }
 
@@ -48,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('mouseup', () => {
         if (!activeTable) return;
+
+        activeTable.classList.remove('shadow-lg', 'z-10');
 
         const snappedX = snapToGrid(parseFloat(activeTable.style.left));
         const snappedY = snapToGrid(parseFloat(activeTable.style.top));

@@ -2,26 +2,26 @@
 
 {% block content %}
 <div class="page-wrap max-w-lg">
+    <p class="font-body text-sm tracking-widest uppercase text-maple mb-3">Reserve Your Table</p>
     <h1 class="page-header">Book a Table</h1>
+    <p class="text-concrete mb-10 leading-relaxed">
+        Tell us when you'd like to visit, and we'll show you what's available —
+        no phone calls, no waiting.
+    </p>
+
     <div class="card">
         <form hx-get="{% url 'booking_slots' %}" hx-target="#slot-list" hx-trigger="change">
             <div>
                 <label for="{{ form.date.id_for_label }}">Date</label>
                 {{ form.date }}
-                {% if form.date.errors %}
-                    <p class="text-vermillion text-xs mt-1">{{ form.date.errors.0 }}</p>
-                {% endif %}
             </div>
 
             <div>
                 <label for="{{ form.party_size.id_for_label }}">Party Size</label>
                 {{ form.party_size }}
-                {% if form.party_size.errors %}
-                    <p class="text-vermillion text-xs mt-1">{{ form.party_size.errors.0 }}</p>
-                {% endif %}
             </div>
         </form>
-        <div id="slot-list" class="mt-6"></div>
+        <div id="slot-list" class="mt-8"></div>
     </div>
 </div>
 {% endblock %}

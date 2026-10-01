@@ -2,41 +2,45 @@
 
 {% block content %}
 <div class="page-wrap max-w-md">
-    <h1 class="page-header text-2xl">{{ title }}</h1>
-    <div class="card mt-6">
+    <p class="text-xs uppercase tracking-widest text-maple mb-2">Staff</p>
+    <h1 class="page-header">{{ title }}</h1>
+
+    <div class="card">
         <form method="post">
             {% csrf_token %}
 
-            <div>
-                <label for="{{ form.name.id_for_label }}">Name</label>
+            <div class="mb-5">
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Name</label>
                 {{ form.name }}
-                {% if form.name.errors %}<p class="text-vermillion text-xs mt-1">{{ form.name.errors.0 }}</p>{% endif %}
+                {% if form.name.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.name.errors.0 }}</p>{% endif %}
             </div>
 
-            <div>
-                <label for="{{ form.min_covers.id_for_label }}">Min Covers</label>
-                {{ form.min_covers }}
-                {% if form.min_covers.errors %}<p class="text-vermillion text-xs mt-1">{{ form.min_covers.errors.0 }}</p>{% endif %}
+            <div class="grid grid-cols-2 gap-5 mb-5">
+                <div>
+                    <label for="{{ form.min_covers.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Min Covers</label>
+                    {{ form.min_covers }}
+                    {% if form.min_covers.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.min_covers.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.max_covers.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Max Covers</label>
+                    {{ form.max_covers }}
+                    {% if form.max_covers.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.max_covers.errors.0 }}</p>{% endif %}
+                </div>
             </div>
 
-            <div>
-                <label for="{{ form.max_covers.id_for_label }}">Max Covers</label>
-                {{ form.max_covers }}
-                {% if form.max_covers.errors %}<p class="text-vermillion text-xs mt-1">{{ form.max_covers.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div>
-                <label for="{{ form.section.id_for_label }}">Section</label>
+            <div class="mb-6">
+                <label for="{{ form.section.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Section</label>
                 {{ form.section }}
-                {% if form.section.errors %}<p class="text-vermillion text-xs mt-1">{{ form.section.errors.0 }}</p>{% endif %}
+                {% if form.section.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.section.errors.0 }}</p>{% endif %}
             </div>
 
-            <div class="flex items-center gap-2 mt-6">
+            <div class="flex items-center gap-2 mb-6">
                 {{ form.is_fixed }}
-                <label for="{{ form.is_fixed.id_for_label }}" class="mt-0">Fixed in place (e.g. bar seating)</label>
+                <label for="{{ form.is_fixed.id_for_label }}" class="text-sm text-ink">Fixed in place (e.g. bar seating)</label>
             </div>
 
-            <button type="submit" class="btn-primary mt-6">Save</button>
+            <button type="submit" class="btn-primary w-full">Save</button>
         </form>
     </div>
 </div>

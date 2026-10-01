@@ -1,24 +1,27 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="page-wrap max-w-lg">
-    <h1 class="page-header">Cancel Booking</h1>
+    <p class="font-body text-sm tracking-widest uppercase text-vermillion mb-3">Cancel Booking</p>
+    <h1 class="page-header">Are you sure?</h1>
     <div class="card">
-        <p class="mb-4">Are you sure you'd like to cancel your booking on {{ booking.date }} at {{ booking.time|time:"g:i A" }}?</p>
+        <p class="text-ink mb-6">
+            You're about to cancel your booking on <strong>{{ booking.date }}</strong> at
+            <strong>{{ booking.time|time:"g:i A" }}</strong>.
+        </p>
 
         {% if booking.deposit_paid and not booking.deposit_refunded %}
             {% if booking.is_within_refund_window %}
-                <p class="text-sm text-concrete mb-6">Your £{{ booking.deposit_amount }} deposit will be refunded.</p>
+                <p class="text-sm text-concrete mb-6 pb-6 border-b border-concrete/30">Your £{{ booking.deposit_amount }} deposit will be refunded.</p>
             {% else %}
-                <p class="text-sm text-vermillion mb-6">
-                    This is within {{ booking.DEPOSIT_REFUND_CUTOFF_HOURS }} hours of your booking - your £{{ booking.deposit_amount }} 
-                    deposit is non-refunable per our cancellation policy.
+                <p class="text-sm text-vermillion mb-6 pb-6 border-b border-concrete/30">
+                    This is within {{ booking.DEPOSIT_REFUND_CUTOFF_HOURS }} hours of your booking — your £{{ booking.deposit_amount }} deposit is non-refundable per our cancellation policy.
                 </p>
             {% endif %}
         {% endif %}
 
-        <form method="post">
+        <form method="post" class="flex gap-4">
             {% csrf_token %}
+            <a href="{% url 'booking_manage' booking.manage_token %}" class="btn-secondary">Keep Booking</a>
             <button type="submit" class="btn-primary">Confirm Cancellation</button>
         </form>
     </div>

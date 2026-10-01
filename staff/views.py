@@ -5,19 +5,20 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 
+from .forms import StaffLoginForm
 from staff.decorators import staff_required
 from bookings.models import Booking
 
 def staff_login(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None and hasattr(user, 'staff_profile'):
-            login(request, user)
-            return redirect('staff_dashboard') # placeholder - built in Sprint 5
-        return render(request, 'staff/login.html', {'error': 'Invalid credentials'})
-    return render(request, 'staff/login.html')
+        form = StaffLoginForm(request, data=request.POST)
+        if form.is_valid():
+            login(request, form.get_user()) 
+            return redirect('staff_dashboard')
+    else:
+        form = StaffLoginForm()
+
+    return render(request, 'staff/login.html', {'form': form})
 
 @login_required
 def staff_logout(request):

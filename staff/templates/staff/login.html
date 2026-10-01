@@ -1,18 +1,38 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="page-wrap flex justify-center">
-    <div class="card w-full max-w-sm">
-        <h1 class="page-header text-2xl">Staff Login</h1>
-        {% if error %}
-            <p class="text-vermillion text-sm mb-2">{{ error }}</p>
-        {% endif %}
+<div class="page-wrap max-w-md">
+    <p class="text-xs uppercase tracking-widest text-maple mb-2">Staff Access</p>
+    <h1 class="page-header">Sign In</h1>
+    <p class="text-concrete mb-8">Enter your staff credentials to continue.</p>
+
+    <div class="card">
         <form method="post">
             {% csrf_token %}
-            <label for="username">Username</label>
-            <input type="text" name="username" id="username">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password">
-            <button type="submit" class="btn-primary mt-6 w-full text-center">Log In</button>
+
+            {% if form.non_field_errors %}
+                <div class="mb-6 text-sm text-vermillion border border-vermillion/40 rounded px-4 py-3">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="mb-5">
+                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">
+                    Username
+                </label>
+                {{ form.username }}
+            </div>
+
+            <div class="mb-6">
+                <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">
+                    Password
+                </label>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" class="btn-primary w-full">Sign In</button>
         </form>
     </div>
 </div>

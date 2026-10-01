@@ -2,13 +2,17 @@
 
 {% block content %}
 <div class="page-wrap">
-    <div class="flex items-center justify-between mb-8">
-        <h1 class="page-header mb-0">Table Combinations</h1>
+    <div class="flex items-center justify-between mb-2">
+        <div>
+            <p class="text-xs uppercase tracking-widest text-maple mb-2">Staff</p>
+            <h1 class="page-header mb-0">Table Combinations</h1>
+        </div>
         <div class="flex gap-4">
             <a href="{% url 'table_list' %}" class="btn-link self-center">Tables →</a>
             <a href="{% url 'combination_create' %}" class="btn-primary">Add Combination</a>
         </div>
     </div>
+    <p class="text-concrete mb-8">Tables that can be pushed together for larger parties.</p>
 
     <div class="card">
         <table class="w-full text-left">
@@ -22,17 +26,17 @@
             </thead>
             <tbody>
                 {% for combo in combinations %}
-                    <tr class="border-b border-concrete/30 last:border-0">
-                        <td class="py-3">{{ combo.name|default:combo }}</td>
+                    <tr class="border-b border-concrete/30 last:border-0 hover:bg-concrete/5 transition-colors">
+                        <td class="py-3 font-medium text-ink">{{ combo.name|default:combo }}</td>
                         <td class="py-3">{{ combo.tables.all|join:", " }}</td>
-                        <td class="py-3">{{ combo.min_covers }}-{{ combo.max_covers }}</td>
-                        <td class="py-3 text-right">
+                        <td class="py-3">{{ combo.min_covers }}–{{ combo.max_covers }}</td>
+                        <td class="py-3 text-right whitespace-nowrap">
                             <a href="{% url 'combination_edit' combo.id %}" class="btn-link mr-4">Edit</a>
                             <a href="{% url 'combination_delete' combo.id %}" class="btn-link text-vermillion">Remove</a>
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="4" class="py-6 text-concrete">No Combinations yet.</td></tr>
+                    <tr><td colspan="4" class="py-6 text-concrete">No combinations yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

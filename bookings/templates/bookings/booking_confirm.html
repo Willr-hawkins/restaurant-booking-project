@@ -1,31 +1,50 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="page-wrap max-w-lg">
+    <p class="font-body text-sm tracking-widest uppercase text-maple mb-3">Step 3 of 3</p>
     <h1 class="page-header">Booking Confirmed</h1>
-    <div class="card">
-        <p class="font-display text-xl mb-6">Thank you, {{ booking.guest_name }}</p>
 
-        <div class="space-y-2 text-sm">
-            <p><span class="text-concrete">Date:</span> {{ booking.date }}</p>
-            <p><span class="text-concrete">Time:</span> {{ booking.time|time:"g:i A" }}</p>
-            <p><span class="text-concrete">Party Size:</span> {{ booking.party_size }}</p>
-            <p><span class="text-concrete">Table:</span> {{ assigned }}</p>
+    <div class="card">
+        <p class="font-display text-2xl mb-8">Thank you, {{ booking.guest_name }}</p>
+
+        <div class="space-y-3 text-sm border-t border-concrete/30 pt-6">
+            <div class="flex justify-between">
+                <span class="text-concrete">Date</span>
+                <span class="text-ink font-medium">{{ booking.date }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-concrete">Time</span>
+                <span class="text-ink font-medium">{{ booking.time|time:"g:i A" }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-concrete">Party Size</span>
+                <span class="text-ink font-medium">{{ booking.party_size }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-concrete">Table</span>
+                <span class="text-ink font-medium">{{ assigned }}</span>
+            </div>
             {% if booking.seating_preference %}
-                <p><span class="text-concrete">Seating Preference:</span> {{ booking.get_seating_preference_display|default:booking.seating_preference }}</p>
+                <div class="flex justify-between">
+                    <span class="text-concrete">Seating Preference</span>
+                    <span class="text-ink font-medium">{{ booking.get_seating_preference_display|default:booking.seating_preference }}</span>
+                </div>
             {% endif %}
             {% if booking.special_requests %}
-                <p><span class="text-concrete">Special Requests:</span> {{ booking.special_requests }}</p>
+                <div class="flex justify-between gap-4">
+                    <span class="text-concrete whitespace-nowrap">Special Requests</span>
+                    <span class="text-ink text-right">{{ booking.special_requests }}</span>
+                </div>
             {% endif %}
         </div>
 
         {% if booking.deposit_required %}
-            <p class="text-vermillion text-sm mt-6">
-                A deposit is required for parties of 6 or more. Payment details will follow seperately.
+            <p class="text-vermillion text-sm mt-6 pt-6 border-t border-concrete/30">
+                A deposit is required for parties of 6 or more. Payment details will follow separately.
             </p>
         {% endif %}
 
-        <p class="text-sm text-concrete mt-6">
+        <p class="text-sm text-concrete mt-6 pt-6 border-t border-concrete/30">
             A confirmation email will be sent to {{ booking.guest_email }}.
         </p>
 

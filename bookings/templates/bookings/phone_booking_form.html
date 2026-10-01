@@ -2,49 +2,75 @@
 
 {% block content %}
 <div class="page-wrap max-w-lg">
+    <p class="text-xs uppercase tracking-widest text-maple mb-2">Staff</p>
     <h1 class="page-header">Phone Booking</h1>
+    <p class="text-concrete mb-8">Take a booking for a guest calling in.</p>
+
     <div class="card">
         <form method="post">
             {% csrf_token %}
 
-            <div>
-                <label for="{{ form.guest_name.id_for_label }}">Full Name</label>
-                {{ form.guest_name }}
+            {% if form.non_field_errors %}
+                <div class="mb-6 text-sm text-vermillion border border-vermillion/40 rounded px-4 py-3">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="grid md:grid-cols-2 gap-5 mb-5">
+                <div>
+                    <label for="{{ form.guest_name.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Full Name</label>
+                    {{ form.guest_name }}
+                    {% if form.guest_name.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.guest_name.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.guest_phone.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Phone Number</label>
+                    {{ form.guest_phone }}
+                    {% if form.guest_phone.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.guest_phone.errors.0 }}</p>{% endif %}
+                </div>
             </div>
-            <div>
-                <label for="{{ form.guest_email.id_for_label }}">Email</label>
+
+            <div class="mb-5">
+                <label for="{{ form.guest_email.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Email</label>
                 {{ form.guest_email }}
+                {% if form.guest_email.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.guest_email.errors.0 }}</p>{% endif %}
             </div>
-            <div>
-                <label for="{{ form.guest_phone.id_for_label }}">Phone Number</label>
-                {{ form.guest_phone }}
+
+            <div class="grid md:grid-cols-3 gap-5 mb-5">
+                <div>
+                    <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Date</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.date.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.time.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Time</label>
+                    {{ form.time }}
+                    {% if form.time.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.time.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.party_size.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Party Size</label>
+                    {{ form.party_size }}
+                    {% if form.party_size.errors %}<p class="text-vermillion text-xs mt-1.5">{{ form.party_size.errors.0 }}</p>{% endif %}
+                </div>
             </div>
-            <div>
-                <label for="{{ form.date.id_for_label }}">Date</label>
-                {{ form.date }}
-            </div>
-            <div>
-                <label for="{{ form.time.id_for_label }}">Time</label>
-                {{ form.time }}
-            </div>
-            <div>
-                <label for="{{ form.party_size.id_for_label }}">Party Size</label>
-                {{ form.party_size }}
-            </div>
-            <div>
-                <label for="{{ form.seating_preference.id_for_label }}">Seating Preference</label>
+
+            <div class="mb-5">
+                <label for="{{ form.seating_preference.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Seating Preference</label>
                 {{ form.seating_preference }}
             </div>
-            <div>
-                <label for="{{ form.special_requests.id_for_label }}">Special Requests</label>
+
+            <div class="mb-5">
+                <label for="{{ form.special_requests.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Special Requests</label>
                 {{ form.special_requests }}
             </div>
-            <div>
-                <label for="{{ form.table_override.id_for_label }}">Table Override</label>
+
+            <div class="mb-6">
+                <label for="{{ form.table_override.id_for_label }}" class="block text-sm font-medium text-ink mb-1.5">Table (optional override)</label>
                 {{ form.table_override }}
             </div>
 
-            <button type="submit" class="btn-primary mt-6">Create Booking</button>
+            <button type="submit" class="btn-primary w-full">Create Booking</button>
         </form>
     </div>
 </div>

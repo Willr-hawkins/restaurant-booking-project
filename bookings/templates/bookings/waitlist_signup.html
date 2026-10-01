@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="page-wrap max-w-lg">
+    <p class="font-body text-sm tracking-widest uppercase text-maple mb-3">Fully Booked</p>
     <h1 class="page-header">Join the Waitlist</h1>
-    <p class="text-concrete text-sm mb-6">We'll email you if a table frees up matching your details.</p>
+    <p class="text-concrete mb-10 leading-relaxed">
+        Tables move quickly — we'll email you the moment one matching your request frees up.
+    </p>
     <div class="card">
         <form method="post">
             {% csrf_token %}
@@ -34,8 +36,9 @@
             <div>
                 <label for="{{ form.notes.id_for_label }}">Notes</label>
                 {{ form.notes }}
+                <p class="text-xs text-concrete mt-1">Flexible on time? Let us know — it helps us match you faster.</p>
             </div>
-            <button type="submit" class="btn-primary mt-6">Join Waitlist</button>
+            <button type="submit" class="btn-primary mt-6 w-full">Join Waitlist</button>
         </form>
     </div>
 </div>

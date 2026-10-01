@@ -3,23 +3,23 @@
         We're closed on {{ date }}{% if closed_reason %} ({{ closed_reason }}){% endif %}. Please choose another date.
     </p>
 {% elif slots %}
-    <p class="text-sm text-concrete mb-3">Available times for {{ date }} ({{ party_size }} guests):</p>
+    <p class="text-sm text-concrete mb-4">Available times for <span class="text-ink font-medium">{{ date }}</span> · {{ party_size }} guests</p>
     <div class="flex flex-wrap gap-2">
         {% for slot in slots %}
-            <a href="{% url 'booking_details' %}?date={{ date|date:'Y-m-d' }}&time={{ slot|time:'H:i' }}&party_size={{ party_size }}"
-            class="border border-ink px-4 py-2 rounded hover:bg-ink hover:text-paper transition-colors inline-block">
-                {{ slot|time:"g:i A" }}
-            </a>
+        <a href="{% url 'booking_details' %}?date={{ date|date:'Y-m-d' }}&time={{ slot|time:'H:i' }}&party_size={{ party_size }}"
+           class="border border-ink/20 px-4 py-2 rounded hover:bg-ink hover:text-paper hover:border-ink transition-colors inline-block text-sm">
+            {{ slot|time:"g:i A" }}
+        </a>
         {% endfor %}
     </div>
 {% elif date %}
     <p class="text-vermillion text-sm mb-2">No tables available on {{ date }} for {{ party_size }} guests.</p>
     {% if next_date %}
-        <p class="text-sm">
+        <p class="text-sm mb-4">
             Nearest availability: <strong>{{ next_date }}</strong> at <strong>{{ next_slot|time:"g:i A" }}</strong>
         </p>
     {% else %}
-        <p class="text-sm text-concrete">No availability found in the next two weeks.</p>
+        <p class="text-sm text-concrete mb-4">No availability found in the next two weeks.</p>
     {% endif %}
     <a href="{% url 'waitlist_signup' %}?date={{ date|date:'Y-m-d' }}&party_size={{ party_size }}" class="btn-link">Join the waitlist for this date →</a>
 {% endif %}
